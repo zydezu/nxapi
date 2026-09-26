@@ -32,6 +32,7 @@ export interface DiscordPresenceConfiguration {
     show_console_online?: boolean;
     show_active_event?: boolean;
     show_play_time?: DiscordPresencePlayTime;
+    show_console?: boolean;
     monitors?: DiscordPresenceExternalMonitorsConfiguration;
 }
 

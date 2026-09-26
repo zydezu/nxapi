@@ -70,6 +70,7 @@ export interface DiscordRpcClient {
 
 declare module 'discord-rpc' {
     interface Presence {
+        name?: string;
         type?: DiscordApiActivityType;
         statusDisplayType?: DiscordApiActivityStatusDisplayType;
         stateUrl?: string;
@@ -100,13 +101,14 @@ export class DiscordRpcClient extends DiscordRPC.Client {
 
     setActivity(args: DiscordRPC.Presence, pid = process.pid) {
         const activity: DiscordRpcActivity = {
+            name: args.name,
             type: args.type,
             status_display_type: args.statusDisplayType,
             state: args.state,
             state_url: args.stateUrl,
             details: args.details,
             details_url: args.detailsUrl,
-            buttons: args.buttons,
+            buttons: args.buttons?.length ? args.buttons : undefined,
             instance: !!args.instance,
         };
 
@@ -164,8 +166,7 @@ export class DiscordRpcClient extends DiscordRPC.Client {
     }
 }
 
-// RPC clients can't set activity name, but some third-party clients do allow this
-type DiscordRpcActivity = Partial<Omit<DiscordApiActivity, 'name' | 'created_at' | 'application_id' | 'emoji'>>;
+type DiscordRpcActivity = Partial<Omit<DiscordApiActivity, 'created_at' | 'application_id' | 'emoji'>>;
 
 interface DiscordApiActivity {
     name: string;

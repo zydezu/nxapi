@@ -8,6 +8,7 @@ export interface DiscordPresenceContext {
     friendcode?: CurrentUserFriendCodeLink;
     activeevent?: ActiveEvent;
     show_play_time?: DiscordPresencePlayTime;
+    show_console?: boolean;
     znc_discord_presence?: ZncDiscordPresence | ZncProxyDiscordPresence;
     proxy_response?: unknown;
     monitors?: ExternalMonitor[];

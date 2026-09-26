@@ -77,6 +77,10 @@ function _Preferences(props: {
         await ipc.setDiscordPresenceOptions({...discord_options, show_console_online: !!show_console_online});
         forceRefreshDiscordOptions();
     }, [ipc, discord_options]);
+    const setDiscordShowConsole = useCallback(async (show_console: boolean | 'mixed') => {
+        await ipc.setDiscordPresenceOptions({...discord_options, show_console: !!show_console});
+        forceRefreshDiscordOptions();
+    }, [ipc, discord_options]);
     const setDiscordShowPlayTime = useCallback(async (show_play_time: DiscordPresencePlayTime) => {
         await ipc.setDiscordPresenceOptions({...discord_options, show_play_time});
         forceRefreshDiscordOptions();
@@ -238,6 +242,19 @@ function _Preferences(props: {
                     </TouchableOpacity>
                 </View>
                 <Text style={[styles.help, theme.text]}>{t('discord.inactive_presence_help')}</Text>
+
+                <View style={[styles.checkboxContainer, styles.checkboxContainerMargin]}>
+                    <CheckBox
+                        value={discord_options?.show_console ?? true}
+                        onValueChange={setDiscordShowConsole}
+                        color={'#' + (accent_colour ?? DEFAULT_ACCENT_COLOUR)}
+                        style={styles.checkbox}
+                    />
+                    <TouchableOpacity style={styles.checkboxLabel} onPress={() => setDiscordShowConsole(!(discord_options?.show_console ?? true))}>
+                        <Text style={[styles.checkboxLabelText, theme.text]}>{t('discord.show_console')}</Text>
+                    </TouchableOpacity>
+                </View>
+                <Text style={[styles.help, theme.text]}>{t('discord.show_console_help')}</Text>
 
                 <Text style={[styles.header, theme.text]}>{t('discord.play_time')}</Text>
 

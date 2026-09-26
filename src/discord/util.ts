@@ -2,7 +2,7 @@ import DiscordRPC from 'discord-rpc';
 import { PresenceGame, PresencePlatform, PresenceState } from '../api/coral-types.js';
 import { default_client, defaultTitle, platform_clients, titles } from './titles.js';
 import createDebug from '../util/debug.js';
-import { product, version } from '../util/product.js';
+import { product } from '../util/product.js';
 import { getTitleIdFromEcUrl, hrduration } from '../util/misc.js';
 import { DiscordPresence, DiscordPresenceContext, DiscordPresencePlayTime } from './types.js';
 import { DiscordApiActivityStatusDisplayType, DiscordApiActivityType } from './rpc.js';
@@ -40,9 +40,6 @@ export function getDiscordPresence(
         if (play_time_text) text.push(play_time_text);
     }
 
-    const nintendo_eshop_redirect_url = titleid ?
-        'https://fancy.org.uk/api/nxapi/title/' + titleid + '/redirect?source=nxapi-' + version + '-discord' : null;
-
     const activity = new DiscordActivity();
 
     if (title.titleName) {
@@ -61,13 +58,6 @@ export function getDiscordPresence(
         activity.setSmallImage(title.smallImageKey, title.smallImageText);
     } else if (context?.friendcode && context.user?.image2Uri) {
         activity.setSmallImage(context.user.image2Uri, 'SW-' + context.friendcode.id);
-    }
-
-    if (game.shopUri) {
-        activity.buttons.push({
-            label: 'Nintendo eShop',
-            url: nintendo_eshop_redirect_url ?? game.shopUri,
-        });
     }
 
     if (online && title.showActiveEvent) {

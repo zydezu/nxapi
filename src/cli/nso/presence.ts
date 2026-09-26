@@ -35,6 +35,10 @@ export function builder(yargs: Argv<ParentArguments>) {
         describe: 'Play time format ("hidden", "nintendo", "approximate", "approximate-since", "hour", "hour-since", "detailed", "detailed-since")',
         type: 'string',
         default: 'detailed-since',
+    }).option('show-console', {
+        describe: 'Show the console name as the second line',
+        type: 'boolean',
+        default: true,
     }).option('friend-nsaid', {
         alias: ['friend-naid'],
         describe: 'Friend\'s Nintendo Switch account ID',
@@ -158,6 +162,7 @@ export async function handler(argv: ArgumentsCamelCase<Arguments>) {
             argv.showPlayTime.toLowerCase() === 'detailed-since' ? DiscordPresencePlayTime.DETAILED_PLAY_TIME_SINCE :
             DiscordPresencePlayTime.DETAILED_PLAY_TIME_SINCE;
 
+        i.show_console = argv.showConsole;
         i.discord_preconnect = argv.discordPreconnect;
         if (argv.discordUser) i.discord_client_filter = (client, id) => client.user?.id === argv.discordUser;
 
@@ -229,6 +234,7 @@ export async function handler(argv: ArgumentsCamelCase<Arguments>) {
         argv.showPlayTime.toLowerCase() === 'detailed-since' ? DiscordPresencePlayTime.DETAILED_PLAY_TIME_SINCE :
         DiscordPresencePlayTime.DETAILED_PLAY_TIME_SINCE;
 
+    i.show_console = argv.showConsole;
     i.presence_user = argv.friendNsaid ?? data?.nsoAccount.user.nsaId;
     i.discord_preconnect = argv.discordPreconnect;
     if (argv.discordUser) i.discord_client_filter = (client, id) => client.user?.id === argv.discordUser;

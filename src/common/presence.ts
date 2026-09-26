@@ -120,6 +120,7 @@ class ZncDiscordPresenceClient {
             friendcode: this.m.show_friend_code ? this.m.force_friend_code ?? friendcode ?? undefined : undefined,
             activeevent: this.m.show_active_event ? activeevent ?? undefined : undefined,
             show_play_time: this.m.show_play_time,
+            show_console: this.m.show_console,
             znc_discord_presence: this.m,
             proxy_response: (this.m) instanceof ZncProxyDiscordPresence ? this.m.last_data : undefined,
             monitors: [...this.monitors.values()],
@@ -412,6 +413,7 @@ export class ZncDiscordPresence extends ZncNotifications {
     show_console_online = false;
     show_active_event = false;
     show_play_time = DiscordPresencePlayTime.DETAILED_PLAY_TIME_SINCE;
+    show_console = true;
 
     discord_client_filter: ((client: DiscordRpcClient, id?: number) => boolean) | undefined = undefined;
 
@@ -516,6 +518,7 @@ export class ZncProxyDiscordPresence extends Loop {
     show_console_online = false;
     readonly show_active_event = false;
     show_play_time = DiscordPresencePlayTime.DETAILED_PLAY_TIME_SINCE;
+    show_console = true;
 
     discord_client_filter: ((client: DiscordRpcClient, id?: number) => boolean) | undefined = undefined;
 

@@ -188,6 +188,7 @@ export class PresenceMonitorManager {
             show_console_online: monitor.show_console_online,
             show_active_event: monitor.show_active_event,
             show_play_time: monitor.show_play_time,
+            show_console: monitor.show_console,
             monitors: this.getDiscordExternalMonitorConfiguration(monitor.discord.onWillStartMonitor),
         };
     }
@@ -240,6 +241,7 @@ export class PresenceMonitorManager {
         monitor.show_console_online = config.show_console_online ?? false;
         if (monitor instanceof ZncDiscordPresence) monitor.show_active_event = config.show_active_event ?? false;
         monitor.show_play_time = config.show_play_time ?? DiscordPresencePlayTime.DETAILED_PLAY_TIME_SINCE;
+        monitor.show_console = config.show_console ?? true;
         monitor.discord.onWillStartMonitor = config.monitors ?
             this.createDiscordExternalMonitorHandler(monitor, config.monitors) : null;
     }
@@ -388,6 +390,7 @@ export class PresenceMonitorManager {
         monitor.show_console_online = existing.show_console_online;
         if (monitor instanceof ZncDiscordPresence) monitor.show_active_event = existing.show_active_event;
         monitor.show_play_time = existing.show_play_time;
+        monitor.show_console = existing.show_console;
         monitor.discord.onWillStartMonitor = existing.discord.onWillStartMonitor;
     }
 

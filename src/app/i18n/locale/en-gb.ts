@@ -275,6 +275,9 @@ export const preferences_window = {
         inactive_presence: 'Show inactive presence',
         inactive_presence_help: 'Shows "Not playing" when a console linked to your account is online, but you are not selected in a game.',
 
+        show_console: 'Show console',
+        show_console_help: 'Shows "Nintendo Switch" or "Nintendo Switch 2" below the game name.',
+
         play_time: 'Play time',
         play_time_hidden: 'Never show play time',
         play_time_nintendo: 'Show play time as it appears on a Nintendo Switch console',
