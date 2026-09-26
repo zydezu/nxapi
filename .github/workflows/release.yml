@@ -1,0 +1,178 @@
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Release tag (e.g. v1.7.0)"
+        required: true
+      changelog:
+        description: "Release notes / changelog"
+        required: false
+      release_type:
+        description: "Release type"
+        required: true
+        type: choice
+        default: draft
+        options:
+          - draft
+          - prerelease
+          - release
+
+jobs:
+  linux_x64:
+    name: Build Linux x64
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: npm ci --force
+      - run: npx tsc
+      - run: npx rollup --config
+        env:
+          NODE_ENV: production
+          NXAPI_AUTH_CLI_CLIENT_ID: ${{ secrets.NXAPI_AUTH_CLIENT_ID }}
+          NXAPI_AUTH_APP_CLIENT_ID: ${{ secrets.NXAPI_AUTH_CLIENT_ID }}
+      - run: npx electron-builder --linux AppImage deb --x64 -p never
+      - uses: actions/upload-artifact@v4
+        with:
+          name: nxapi_Linux_x64
+          path: |
+            dist/app/package/*.AppImage
+            dist/app/package/*.deb
+
+  macos_x64:
+    name: Build macOS x64
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: npm ci --force
+      - run: npx tsc
+      - run: npx rollup --config
+        env:
+          NODE_ENV: production
+          NXAPI_AUTH_CLI_CLIENT_ID: ${{ secrets.NXAPI_AUTH_CLIENT_ID }}
+          NXAPI_AUTH_APP_CLIENT_ID: ${{ secrets.NXAPI_AUTH_CLIENT_ID }}
+      - run: npx electron-builder --mac zip --x64 -p never
+      - uses: actions/upload-artifact@v4
+        with:
+          name: nxapi_MacOS_x64
+          path: |
+            dist/app/package/*.zip
+
+  macos_arm64:
+    name: Build macOS ARM64
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: npm ci --force
+      - run: npx tsc
+      - run: npx rollup --config
+        env:
+          NODE_ENV: production
+          NXAPI_AUTH_CLI_CLIENT_ID: ${{ secrets.NXAPI_AUTH_CLIENT_ID }}
+          NXAPI_AUTH_APP_CLIENT_ID: ${{ secrets.NXAPI_AUTH_CLIENT_ID }}
+      - run: npx electron-builder --mac zip --arm64 -p never || true
+      - uses: actions/upload-artifact@v4
+        continue-on-error: true
+        with:
+          name: nxapi_MacOS_ARM64
+          path: |
+            dist/app/package/*.zip
+
+  windows_x64:
+    name: Build Windows x64
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: npm ci --force
+      - run: npx tsc
+      - run: npx rollup --config
+        env:
+          NODE_ENV: production
+          NXAPI_AUTH_CLI_CLIENT_ID: ${{ secrets.NXAPI_AUTH_CLIENT_ID }}
+          NXAPI_AUTH_APP_CLIENT_ID: ${{ secrets.NXAPI_AUTH_CLIENT_ID }}
+      - run: npx electron-builder --win nsis --x64 -p never
+      - uses: actions/upload-artifact@v4
+        with:
+          name: nxapi_Windows_x64
+          path: |
+            dist/app/package/*.exe
+
+  windows_arm64:
+    name: Build Windows ARM64
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: npm ci --force
+      - run: npx tsc
+      - run: npx rollup --config
+        env:
+          NODE_ENV: production
+          NXAPI_AUTH_CLI_CLIENT_ID: ${{ secrets.NXAPI_AUTH_CLIENT_ID }}
+          NXAPI_AUTH_APP_CLIENT_ID: ${{ secrets.NXAPI_AUTH_CLIENT_ID }}
+      - run: npx electron-builder --win nsis --arm64 -p never || true
+      - uses: actions/upload-artifact@v4
+        continue-on-error: true
+        with:
+          name: nxapi_Windows_ARM64
+          path: |
+            dist/app/package/*.exe
+
+  release:
+    name: Create Release
+    if: always()
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    needs:
+      - linux_x64
+      - macos_x64
+      - macos_arm64
+      - windows_x64
+      - windows_arm64
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: releases
+          merge-multiple: true
+      - name: List artifacts
+        run: ls -la releases/
+      - name: Create GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ inputs.tag }}
+          CHANGELOG: ${{ inputs.changelog }}
+          RELEASE_TYPE: ${{ inputs.release_type }}
+        run: |
+          flags=()
+          case "$RELEASE_TYPE" in
+            draft)      flags+=(--draft) ;;
+            prerelease) flags+=(--prerelease) ;;
+          esac
+
+          if [ -n "$CHANGELOG" ]; then
+            flags+=(--notes "$CHANGELOG")
+          else
+            flags+=(--generate-notes)
+          fi
+
+          gh release create "$TAG" releases/* \
+            --title "nxapi $TAG" \
+            "${flags[@]}"

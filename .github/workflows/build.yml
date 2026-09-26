@@ -1,0 +1,179 @@
+name: Build
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  linux_x64:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: npm ci --force
+      - run: npx tsc
+      - run: npx rollup --config
+        env:
+          NODE_ENV: production
+          NXAPI_AUTH_CLI_CLIENT_ID: ${{ secrets.NXAPI_AUTH_CLIENT_ID }}
+          NXAPI_AUTH_APP_CLIENT_ID: ${{ secrets.NXAPI_AUTH_CLIENT_ID }}
+      - run: npx electron-builder --linux AppImage deb --x64 -p never
+      - uses: actions/upload-artifact@v4
+        with:
+          name: nxapi_Linux_x64
+          path: |
+            dist/app/package/*.AppImage
+            dist/app/package/*.deb
+
+  macos_x64:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: npm ci --force
+      - run: npx tsc
+      - run: npx rollup --config
+        env:
+          NODE_ENV: production
+          NXAPI_AUTH_CLI_CLIENT_ID: ${{ secrets.NXAPI_AUTH_CLIENT_ID }}
+          NXAPI_AUTH_APP_CLIENT_ID: ${{ secrets.NXAPI_AUTH_CLIENT_ID }}
+      - run: npx electron-builder --mac zip --x64 -p never
+      - uses: actions/upload-artifact@v4
+        with:
+          name: nxapi_MacOS_x64
+          path: |
+            dist/app/package/*.zip
+
+  macos_arm64:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: npm ci --force
+      - run: npx tsc
+      - run: npx rollup --config
+        env:
+          NODE_ENV: production
+          NXAPI_AUTH_CLI_CLIENT_ID: ${{ secrets.NXAPI_AUTH_CLIENT_ID }}
+          NXAPI_AUTH_APP_CLIENT_ID: ${{ secrets.NXAPI_AUTH_CLIENT_ID }}
+      - run: npx electron-builder --mac zip --arm64 -p never || true
+      - uses: actions/upload-artifact@v4
+        continue-on-error: true
+        with:
+          name: nxapi_MacOS_ARM64
+          path: |
+            dist/app/package/*.zip
+
+  windows_x64:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: npm ci --force
+      - run: npx tsc
+      - run: npx rollup --config
+        env:
+          NODE_ENV: production
+          NXAPI_AUTH_CLI_CLIENT_ID: ${{ secrets.NXAPI_AUTH_CLIENT_ID }}
+          NXAPI_AUTH_APP_CLIENT_ID: ${{ secrets.NXAPI_AUTH_CLIENT_ID }}
+      - run: npx electron-builder --win nsis --x64 -p never
+      - uses: actions/upload-artifact@v4
+        with:
+          name: nxapi_Windows_x64
+          path: |
+            dist/app/package/*.exe
+
+  windows_arm64:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: npm ci --force
+      - run: npx tsc
+      - run: npx rollup --config
+        env:
+          NODE_ENV: production
+          NXAPI_AUTH_CLI_CLIENT_ID: ${{ secrets.NXAPI_AUTH_CLIENT_ID }}
+          NXAPI_AUTH_APP_CLIENT_ID: ${{ secrets.NXAPI_AUTH_CLIENT_ID }}
+      - run: npx electron-builder --win nsis --arm64 -p never || true
+      - uses: actions/upload-artifact@v4
+        continue-on-error: true
+        with:
+          name: nxapi_Windows_ARM64
+          path: |
+            dist/app/package/*.exe
+
+  Tag_Build:
+    name: Tag Build (All Artifacts)
+    if: always()
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    needs:
+      - linux_x64
+      - macos_x64
+      - macos_arm64
+      - windows_x64
+      - windows_arm64
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download Linux x64 artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: nxapi_Linux_x64
+          path: releases
+        continue-on-error: true
+      - name: Download macOS x64 artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: nxapi_MacOS_x64
+          path: releases
+        continue-on-error: true
+      - name: Download macOS ARM64 artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: nxapi_MacOS_ARM64
+          path: releases
+        continue-on-error: true
+      - name: Download Windows x64 artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: nxapi_Windows_x64
+          path: releases
+        continue-on-error: true
+      - name: Download Windows ARM64 artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: nxapi_Windows_ARM64
+          path: releases
+        continue-on-error: true
+      - name: Check for artifacts
+        id: check
+        run: |
+          if ls releases/* 1> /dev/null 2>&1; then echo "artifact_exists=true" >> $GITHUB_OUTPUT; else echo "artifact_exists=false" >> $GITHUB_OUTPUT; fi
+      - name: List files
+        run: ls -la releases/ || true
+      - name: Set up release metadata
+        run: |
+          echo "REPOSITORY_NAME=$(basename $GITHUB_REPOSITORY)" >> $GITHUB_ENV
+          echo "DATETIME=$(date +%Y%m%d-%H%M%S)" >> $GITHUB_ENV
+      - name: Create tag
+        if: steps.check.outputs.artifact_exists == 'true'
+        run: |
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git tag ${{ env.REPOSITORY_NAME }}-${{ env.DATETIME }}
+          git push origin ${{ env.REPOSITORY_NAME }}-${{ env.DATETIME }}
