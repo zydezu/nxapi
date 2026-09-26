@@ -17,7 +17,9 @@ export function getDiscordPresence(
 
     const text: (string | undefined)[] = [];
 
-    if (title.titleName === true) text.push(game.name);
+    if (title.titleName === true) text.push(!(context?.show_console ?? true) ? undefined :
+        context?.platform === PresencePlatform.OUNCE ? 'Nintendo Switch 2' :
+        context?.platform === PresencePlatform.NX ? 'Nintendo Switch' : undefined);
     else if (title.titleName) text.push(title.titleName);
 
     const online = state === PresenceState.PLAYING;
@@ -42,11 +44,12 @@ export function getDiscordPresence(
 
     const activity = new DiscordActivity();
 
-    if (title.titleName) {
+    if (typeof title.titleName === 'string') {
         // If this is set it/the title name is used as the details field
         activity.statusDisplayType = DiscordApiActivityStatusDisplayType.DETAILS;
     }
 
+    activity.name = game.name;
     activity.details = text[0];
     activity.state = text[1];
 
@@ -85,6 +88,7 @@ export function getDiscordPresence(
 }
 
 export class DiscordActivity implements DiscordRPC.Presence {
+    name?: string = undefined;
     type?: DiscordApiActivityType = undefined;
     statusDisplayType?: DiscordApiActivityStatusDisplayType = undefined;
     details?: string = undefined;
@@ -105,7 +109,6 @@ export class DiscordActivity implements DiscordRPC.Presence {
         let text = product;
 
         if (this.platform === PresencePlatform.NX) text = 'Playing on Nintendo Switch | ' + text;
-        if (this.platform === PresencePlatform.OUNCE) text = 'Playing on Nintendo Switch 2 | ' + text;
 
         return text;
     }

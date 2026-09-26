@@ -9,7 +9,7 @@ import { askAddNsoAccount, askAddPctlAccount } from './na-auth.js';
 import { App } from './index.js';
 import { EmbeddedPresenceMonitor } from './monitor.js';
 import { DiscordPresenceConfiguration, DiscordPresenceSource, DiscordStatus, LoginItemOptions, WindowType } from '../common/types.js';
-import { CurrentUser, CurrentUserFriendCodeLink, Friend, Game, PresencePlatform, PresenceState, WebService } from '../../api/coral-types.js';
+import { CurrentUser, CurrentUserFriendCodeLink, Friend, Game, Media, PresencePlatform, PresenceState, WebService } from '../../api/coral-types.js';
 import { NintendoAccountSessionTokenJwtPayload, NintendoAccountUser } from '../../api/na.js';
 import { DiscordPresence } from '../../discord/types.js';
 import { getDiscordRpcClients } from '../../discord/rpc.js';
@@ -17,13 +17,15 @@ import { default_client } from '../../discord/titles.js';
 import type { FriendProps } from '../browser/friend/index.js';
 import type { DiscordSetupProps } from '../browser/discord/index.js';
 import type { AddFriendProps } from '../browser/add-friend/index.js';
+import type { AlbumProps } from '../browser/album/index.js';
+import { copyAlbumImage, saveAlbumItem } from './album.js';
 import { CoralUser } from '../../common/users.js';
 import { MembershipRequiredError } from '../../common/auth/util.js';
 import { showErrorDialog } from './util.js';
 
 const debug = createDebug('app:main:ipc');
 
-export type CachedErrorKey = 'user' | 'announcements' | 'friends' | 'webservices' | 'activeevent' | 'friendcodeurl' | 'friendrequests-received' | 'friendrequests-sent';
+export type CachedErrorKey = 'user' | 'announcements' | 'friends' | 'webservices' | 'activeevent' | 'media' | 'friendcodeurl' | 'friendrequests-received' | 'friendrequests-sent';
 const cached_errors = new Map<string, Map<CachedErrorKey, Error>>();
 
 function createErrorHandler(user: CoralUser<any>, key: CachedErrorKey): (err: Error) => void
@@ -122,6 +124,8 @@ export function setupIpc(appinstance: App, ipcMain: IpcMain) {
     handle('coral:activeevent', (e, token: string) => store.users.get(token).then(u => u.getActiveEvent()
         .then(e => e ?? {}))
         .catch(createErrorHandler(token, 'activeevent')));
+    handle('coral:media', (e, token: string) => store.users.get(token).then(u => u.getMedia())
+        .catch(createErrorHandler(token, 'media')));
     handle('coral:friendcodeurl', (e, token: string) => store.users.get(token).then(u => u.nso.getFriendCodeUrl())
         .catch(createErrorHandler(token, 'friendcodeurl')));
     handle('coral:friendrequests:received', (e, token: string) => store.users.get(token).then(u => u.getReceivedFriendRequests())
@@ -163,6 +167,7 @@ export function setupIpc(appinstance: App, ipcMain: IpcMain) {
         createModalWindow(WindowType.DISCORD_PRESENCE, props).id);
     handle('window:addfriend', (e, props: AddFriendProps) =>
         createModalWindow(WindowType.ADD_FRIEND, props, e.sender).id);
+    handle('window:showalbum', (e, props: AlbumProps) => appinstance.showAlbumWindow(props).id);
     handle('window:setheight', (e, height: number) => {
         const window = BrowserWindow.fromWebContents(e.sender)!;
         setWindowHeight(window, height);
@@ -196,6 +201,9 @@ export function setupIpc(appinstance: App, ipcMain: IpcMain) {
 
     handle('moon:gettoken', (e, id: string) => storage.getItem('NintendoAccountToken-pctl.' + id));
     handle('moon:getcachedtoken', (e, token: string) => storage.getItem('MoonToken.' + token));
+
+    handle('album:save', (e, item: Media) => saveAlbumItem(item, BrowserWindow.fromWebContents(e.sender) ?? undefined));
+    handle('album:copy', (e, item: Media) => copyAlbumImage(item));
 
     handle('misc:open-url', (e, url: string) => shell.openExternal(url));
     handle('misc:share', (e, item: SharingItem) =>

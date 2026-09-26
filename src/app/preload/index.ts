@@ -7,12 +7,13 @@ import type { SavedToken } from '../../common/auth/coral.js';
 import type { SavedMoonToken } from '../../common/auth/moon.js';
 import type { UpdateCacheData } from '../../common/update.js';
 import type { StatusUpdate } from '../../common/status.js';
-import type { Announcements_4, CoralSuccessResponse, CurrentUser, CurrentUserFriendCodeLink, Friend, Friend_4, FriendCodeUrl, FriendCodeUser, GetActiveEventResult, ReceivedFriendRequests, SentFriendRequests, WebService, WebServices_4 } from '../../api/coral-types.js';
+import type { Announcements_4, CoralSuccessResponse, CurrentUser, CurrentUserFriendCodeLink, Friend, Friend_4, FriendCodeUrl, FriendCodeUser, GetActiveEventResult, Media, ReceivedFriendRequests, SentFriendRequests, WebService, WebServices_4 } from '../../api/coral-types.js';
 import type { DiscordPresence } from '../../discord/types.js';
 import type { CachedErrorKey } from '../main/ipc.js';
 import type { DiscordSetupProps } from '../browser/discord/index.js';
 import type { FriendProps } from '../browser/friend/index.js';
 import type { AddFriendProps } from '../browser/add-friend/index.js';
+import type { AlbumProps } from '../browser/album/index.js';
 import { NintendoAccountUserCoral } from '../../api/coral.js';
 import { NintendoAccountUserMoon } from '../../api/moon.js';
 
@@ -69,6 +70,7 @@ const ipc = {
     getWebServices: (token: string) => inv<WebServices_4 | undefined>('coral:webservices', token),
     openWebService: (webservice: WebService, token: string, qs?: string) => inv<number>('coral:openwebservice', webservice, token, qs),
     getCoralActiveEvent: (token: string) => inv<GetActiveEventResult>('coral:activeevent', token),
+    getCoralMedia: (token: string) => inv<Media[]>('coral:media', token),
     getNsoFriendCodeUrl: (token: string) => inv<FriendCodeUrl>('coral:friendcodeurl', token),
     getNsoReceivedFriendRequests: (token: string) => inv<ReceivedFriendRequests>('coral:friendrequests:received', token),
     getNsoSentFriendRequests: (token: string) => inv<SentFriendRequests>('coral:friendrequests:sent', token),
@@ -97,10 +99,14 @@ const ipc = {
     showFriendModal: (props: FriendProps) => inv<number>('window:showfriend', props),
     showDiscordModal: (props: DiscordSetupProps = {}) => inv<number>('window:discord', props),
     showAddFriendModal: (props: AddFriendProps) => inv<number>('window:addfriend', props),
+    showAlbumWindow: (props: AlbumProps) => inv<number>('window:showalbum', props),
     setWindowHeight: (height: number) => inv('window:setheight', height),
 
     openExternalUrl: (url: string) => inv('misc:open-url', url),
     share: (item: SharingItem) => inv('misc:share', item),
+
+    saveAlbumItem: (item: Media) => inv<string | null>('album:save', item),
+    copyAlbumImage: (item: Media) => inv('album:copy', item),
 
     showUserMenu: (user: NintendoAccountUserCoral | NintendoAccountUserMoon, nso?: CurrentUser<true> | CurrentUser<false>, moon?: boolean) => inv('menu:user', user, nso, moon),
     showAddUserMenu: () => inv('menu:add-user'),
@@ -125,6 +131,7 @@ ipcRenderer.on('nxapi:accounts:shouldrefresh', () => events.emit('update-nintend
 ipcRenderer.on('nxapi:discord:shouldrefresh', () => events.emit('update-discord-presence-source'));
 ipcRenderer.on('nxapi:discord:presence', (e, p: DiscordPresence) => events.emit('update-discord-presence', p));
 ipcRenderer.on('nxapi:discord:user', (e, u: User) => events.emit('update-discord-user', u));
+ipcRenderer.on('nxapi:album:select', (e, id: string) => events.emit('album:select', id));
 ipcRenderer.on('nxapi:discord:status', (e, s: DiscordStatus | null) => events.emit('update-discord-status', s));
 
 let language: string | undefined = invSync('app:language');

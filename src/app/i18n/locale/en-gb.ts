@@ -228,6 +228,12 @@ export const main_window = {
         presence_offline: 'Offline',
     },
 
+    album_section: {
+        title: 'Album',
+        view_all: 'View all',
+        no_media: 'Screenshots and videos uploaded from your Nintendo Switch 2 will appear here.',
+    },
+
     webservices_section: {
         title: 'Game-specific services',
     },
@@ -397,4 +403,26 @@ export const addaccountmanual_window = {
 
     cancel: 'Cancel',
     save: 'Add account',
+};
+
+export const album_window = {
+    title: 'Album',
+
+    no_media: 'No screenshots or videos. Upload captures from your Nintendo Switch 2 to see them here.',
+    error: 'Unable to load the album.',
+    retry: 'Retry',
+
+    system: 'Nintendo Switch 2',
+    captured_at: 'Captured {{date, datetime}}',
+    expires_at: 'Available until {{date, datetime}}',
+
+    back: 'Back',
+    previous: 'Previous',
+    next: 'Next',
+    save: 'Save',
+    saving: 'Saving...',
+    saved: 'Saved',
+    copy: 'Copy image',
+    copying: 'Copying...',
+    copied: 'Copied',
 };

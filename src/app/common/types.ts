@@ -7,6 +7,7 @@ export enum WindowType {
     ADD_FRIEND = 'AddFriend',
     PREFERENCES = 'Preferences',
     ADD_ACCOUNT_MANUAL_PROMPT = 'AddAccountManualPrompt',
+    ALBUM = 'Album',
 }
 
 interface WindowProps {
@@ -16,6 +17,7 @@ interface WindowProps {
     [WindowType.ADD_FRIEND]: import('../browser/add-friend/index.js').AddFriendProps;
     [WindowType.PREFERENCES]: import('../browser/preferences/index.js').PreferencesProps;
     [WindowType.ADD_ACCOUNT_MANUAL_PROMPT]: import('../browser/add-account-manual/index.js').AddAccountManualPromptProps;
+    [WindowType.ALBUM]: import('../browser/album/index.js').AlbumProps;
 }
 
 export interface WindowConfiguration<T extends WindowType = WindowType> {

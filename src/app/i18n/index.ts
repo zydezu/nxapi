@@ -50,6 +50,7 @@ const namespaces = {
     addfriend_window: 'app',
     discordsetup_window: 'app',
     addaccountmanual_window: 'app',
+    album_window: 'app',
 } as const;
 
 type Namespace = keyof typeof namespaces;

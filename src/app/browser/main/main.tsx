@@ -6,6 +6,7 @@ import { RequestState, useAccentColour, useAsync, useColourScheme, useEventListe
 import Friends from './friends.js';
 import WebServices from './webservices.js';
 import Event from './event.js';
+import Album from './album.js';
 import Section from './section.js';
 import { TEXT_COLOUR_DARK, TEXT_COLOUR_LIGHT } from '../constants.js';
 import SetupDiscordPresence from './discord-setup.js';
@@ -28,6 +29,9 @@ export default function Main(props: {
     const [active_event, active_event_error, active_event_state, forceRefreshActiveEvent] = useAsync(useCallback(() => props.user.nsotoken ?
         ipc.getCoralActiveEvent(props.user.nsotoken) : Promise.resolve(null), [ipc, props.user.nsotoken]));
 
+    const [media, media_error, media_state, forceRefreshMedia] = useAsync(useCallback(() => props.user.nsotoken ?
+        ipc.getCoralMedia(props.user.nsotoken) : Promise.resolve(null), [ipc, props.user.nsotoken]));
+
     const [last_refresh_at, setLastRefreshAt] = useState(() => Date.now());
 
     const loading = announcements_state === RequestState.LOADING ||
@@ -37,8 +41,8 @@ export default function Main(props: {
 
     const refresh = useCallback(() => Promise.all([
         setLastRefreshAt(Date.now()),
-        forceRefreshFriends(), forceRefreshWebServices(), forceRefreshActiveEvent(),
-    ]), [forceRefreshFriends, forceRefreshWebServices, forceRefreshActiveEvent]);
+        forceRefreshFriends(), forceRefreshWebServices(), forceRefreshActiveEvent(), forceRefreshMedia(),
+    ]), [forceRefreshFriends, forceRefreshWebServices, forceRefreshActiveEvent, forceRefreshMedia]);
 
     useEffect(() => {
         if (loading || !props.autoRefresh) return;
@@ -91,6 +95,8 @@ export default function Main(props: {
         {props.user.nso ? <SetupDiscordPresence user={props.user} friends={friends} /> : null}
         {props.user.nso && friends ? <Friends user={props.user} friends={friends}
             loading={friends_state === RequestState.LOADING} error={friends_error ?? undefined} /> : null}
+        {props.user.nso && media ? <Album user={props.user} media={media}
+            loading={media_state === RequestState.LOADING} error={media_error ?? undefined} /> : null}
         {props.user.nso && webservices ? <WebServices user={props.user} webservices={webservices}
             loading={webservices_state === RequestState.LOADING} error={webservices_error ?? undefined} /> : null}
         {props.user.nso && active_event && 'id' in active_event ? <Event user={props.user} event={active_event}

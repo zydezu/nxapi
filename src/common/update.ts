@@ -8,7 +8,7 @@ import { timeoutSignal } from '../util/misc.js';
 
 const debug = createDebug('nxapi:update');
 
-const RELEASES_URL = 'https://api.github.com/repos/samuelthomas2774/nxapi/releases';
+const RELEASES_URL = 'https://api.github.com/repos/zydezu/nxapi/releases';
 
 export async function checkUpdates() {
     if (docker) {
@@ -31,7 +31,9 @@ export async function checkUpdates() {
     try {
         const data: UpdateCacheData = JSON.parse(await fs.readFile(update_cache_path, 'utf-8'));
 
-        if (data && data.current_version === version && data.expires_at > Date.now()) {
+        if (data && data.current_version === version && data.expires_at > Date.now() &&
+            (!('releases_url' in data) || data.releases_url === RELEASES_URL)
+        ) {
             if ('update_available' in data && data.update_available) {
                 console.warn('[nxapi] Update available - current version %s, latest %s',
                     data.current_version, data.latest_version);
@@ -46,11 +48,13 @@ export async function checkUpdates() {
     try {
         const [signal, cancel] = timeoutSignal();
         const response = await fetch(RELEASES_URL, {signal}).finally(cancel);
-        const releases = await response.json() as Release[];
+        if (!response.ok) throw new Error('GitHub API returned ' + response.status + ' ' + response.statusText);
+        const releases = (await response.json() as Release[])
+            .filter(r => !r.draft && /^v?\d+\.\d+\.\d+/.test(r.tag_name));
 
         const current = releases.find(r => r.tag_name === 'v' + version);
-        const latest = releases.find(r => !r.prerelease || current?.prerelease) ?? releases[0];
-        const latest_version = latest.tag_name.replace(/^v/, '');
+        const latest: Release | undefined = releases.find(r => !r.prerelease || current?.prerelease) ?? releases[0];
+        const latest_version = latest?.tag_name.replace(/^v/, '') ?? version;
 
         const data: UpdateCacheDataSuccess = {
             created_at: Date.now(),
@@ -61,7 +65,7 @@ export async function checkUpdates() {
             current_version: version,
             latest,
             latest_version,
-            update_available: version !== latest_version,
+            update_available: compareVersions(latest_version, version) > 0,
         };
 
         await fs.writeFile(update_cache_path, JSON.stringify(data, null, 4) + '\n');
@@ -69,7 +73,7 @@ export async function checkUpdates() {
         if (data.update_available) {
             console.warn('[nxapi] Update available - current version %s, latest %s', version, latest_version);
         } else {
-            debug('Using latest %s version %s', latest.prerelease ? 'prerelease' : 'stable', latest_version);
+            debug('Using latest %s version %s', latest?.prerelease ? 'prerelease' : 'stable', latest_version);
         }
 
         debug('Next update check at %s', new Date(data.expires_at));
@@ -91,6 +95,22 @@ export async function checkUpdates() {
     }
 }
 
+function compareVersions(a: string, b: string) {
+    const [a_main, a_pre] = a.split('-', 2);
+    const [b_main, b_pre] = b.split('-', 2);
+    const a_parts = a_main.split('.').map(n => parseInt(n) || 0);
+    const b_parts = b_main.split('.').map(n => parseInt(n) || 0);
+
+    for (let i = 0; i < Math.max(a_parts.length, b_parts.length); i++) {
+        const diff = (a_parts[i] ?? 0) - (b_parts[i] ?? 0);
+        if (diff) return diff;
+    }
+
+    // A release is newer than a prerelease of the same version
+    if (!a_pre !== !b_pre) return a_pre ? -1 : 1;
+    return (a_pre ?? '').localeCompare(b_pre ?? '');
+}
+
 export type UpdateCacheData = UpdateCacheDataSuccess | UpdateCacheDataFailed;
 
 export interface UpdateCacheDataSuccess {
@@ -100,7 +120,7 @@ export interface UpdateCacheDataSuccess {
     releases_url: string;
     current: Release | undefined;
     current_version: string;
-    latest: Release;
+    latest: Release | undefined;
     latest_version: string;
     update_available: boolean;
 }

@@ -28,11 +28,11 @@ export default function Update() {
         status_updates?.find(s => s.flags & (1 << StatusUpdateFlag.SUPPRESS_UPDATE_BANNER)),
         [status_updates]);
 
-    return update && 'update_available' in update && update.update_available && !status_update_suppress_update_banner ? <View style={styles.container}>
-        <Text style={styles.updateText}>{t('update_available', {name: update.latest.name})}</Text>
+    return update && 'update_available' in update && update.update_available && update.latest && !status_update_suppress_update_banner ? <View style={styles.container}>
+        <Text style={styles.updateText}>{t('update_available', {name: update.latest!.name})}</Text>
         <View style={styles.updateButton}>
             <Button title={t('download')}
-                onPress={() => ipc.openExternalUrl(update.latest.html_url)}
+                onPress={() => ipc.openExternalUrl(update.latest!.html_url)}
                 color={'#' + accent_colour} />
         </View>
     </View> : update && 'error_message' in update ? <View style={styles.container}>

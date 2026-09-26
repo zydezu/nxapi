@@ -25,6 +25,7 @@ import { initStorage, paths } from '../../util/storage.js';
 import { NxapiClientAssertionProvider, setClientAssertionProvider } from '../../util/nxapi-auth.js';
 import createI18n, { languages } from '../i18n/index.js';
 import { CoralApiInterface } from '../../api/coral.js';
+import type { AlbumProps } from '../browser/album/index.js';
 import { StatusUpdateIdentifierSymbol, StatusUpdateMonitor, StatusUpdateNotify, StatusUpdateResult, StatusUpdateSubscriber } from '../../common/status.js';
 
 const debug = createDebug('app:main');
@@ -118,6 +119,31 @@ export class App {
         window.on('closed', () => this.preferences_window = null);
 
         return this.preferences_window = window;
+    }
+
+    album_windows = new Map</** Nintendo Account ID */ string, BrowserWindow>();
+
+    showAlbumWindow(props: AlbumProps) {
+        const existing = this.album_windows.get(props.user);
+
+        if (existing) {
+            if (props.item) existing.webContents.send('nxapi:album:select', props.item);
+            existing.show();
+            existing.focus();
+            return existing;
+        }
+
+        const window = createWindow(WindowType.ALBUM, props, {
+            width: 960,
+            height: 680,
+            minWidth: 560,
+            minHeight: 400,
+        });
+
+        window.on('closed', () => this.album_windows.delete(props.user));
+        this.album_windows.set(props.user, window);
+
+        return window;
     }
 
     static async createI18n() {
