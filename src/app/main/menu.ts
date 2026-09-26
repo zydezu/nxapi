@@ -1,4 +1,4 @@
-import { app, Menu, Tray, nativeImage, MenuItem, BrowserWindow, KeyboardEvent } from 'electron';
+import { app, Menu, Tray, nativeImage, MenuItem, BaseWindow, BrowserWindow, KeyboardEvent } from 'electron';
 import path from 'node:path';
 import { askAddNsoAccount, askAddPctlAccount } from './na-auth.js';
 import { App } from './index.js';
@@ -141,9 +141,9 @@ export default class MenuApp {
         this.tray.setContextMenu(menu);
     }
 
-    addNsoAccount = (item: MenuItem, window: BrowserWindow | undefined, event: KeyboardEvent) =>
+    addNsoAccount = (item: MenuItem, window: BaseWindow | undefined, event: KeyboardEvent) =>
         askAddNsoAccount(this.app, !event.shiftKey);
-    addPctlAccount = (item: MenuItem, window: BrowserWindow | undefined, event: KeyboardEvent) =>
+    addPctlAccount = (item: MenuItem, window: BaseWindow | undefined, event: KeyboardEvent) =>
         askAddPctlAccount(this.app, !event.shiftKey);
 
     protected webservices = new Map</** language */ string, WebService[]>();

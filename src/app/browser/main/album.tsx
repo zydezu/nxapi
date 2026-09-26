@@ -4,14 +4,15 @@ import { useTranslation } from 'react-i18next';
 import ipc from '../ipc.js';
 import { useAccentColour, useColourScheme, User } from '../util.js';
 import { Media, MediaType } from '../../../api/coral-types.js';
-import { TEXT_COLOUR_DARK, TEXT_COLOUR_LIGHT } from '../constants.js';
+import { HIGHLIGHT_COLOUR_DARK, HIGHLIGHT_COLOUR_LIGHT, TEXT_COLOUR_DARK, TEXT_COLOUR_LIGHT } from '../constants.js';
 import Section, { HEADER_SIZE } from './section.js';
+import { Skeleton } from '../components/index.js';
 
 const PREVIEW_COUNT = 20;
 
 export default function Album(props: {
     user: User<true>;
-    media: Media[];
+    media: Media[] | null;
     loading?: boolean;
     error?: Error;
 }) {
@@ -23,11 +24,11 @@ export default function Album(props: {
         ipc.showAlbumWindow({user: props.user.user.id, item});
     }, [props.user.user.id]);
 
-    const media = useMemo(() => [...props.media]
+    const media = useMemo(() => props.media ? [...props.media]
         .sort((a, b) => b.capturedAt - a.capturedAt)
-        .slice(0, PREVIEW_COUNT), [props.media]);
+        .slice(0, PREVIEW_COUNT) : null, [props.media]);
 
-    const header_buttons = props.media.length ? <TouchableOpacity onPress={() => showAlbum()} style={styles.iconTouchable}>
+    const header_buttons = props.media?.length ? <TouchableOpacity onPress={() => showAlbum()} style={styles.iconTouchable}>
         <Text style={[styles.viewAll, {color: '#' + accent_colour}]}>{t('view_all')}</Text>
     </TouchableOpacity> : null;
 
@@ -35,10 +36,10 @@ export default function Album(props: {
         errorKey={[props.user.nsotoken, 'media']}
         headerButtons={header_buttons}
     >
-        {media.length ? <ScrollView horizontal>
+        {!media ? <AlbumSkeletonRow /> : media.length ? <ScrollView horizontal>
             <View style={styles.content}>
                 {media.map(item => <TouchableOpacity key={item.id} onPress={() => showAlbum(item.id)} style={styles.item}>
-                    <Image source={{uri: item.thumbnailUri, width: 128, height: 72}} style={styles.thumbnail as ImageStyle} />
+                    <Image source={{uri: item.thumbnailUri, width: 128, height: 72}} style={[styles.thumbnail, theme.thumbnail] as ImageStyle} />
                     {item.type === MediaType.VIDEO ? <View style={styles.videoBadge}>
                         <Text style={styles.videoBadgeText}>▶ {formatDuration(item.videoDuration)}</Text>
                     </View> : null}
@@ -48,6 +49,12 @@ export default function Album(props: {
             <Text style={[styles.noMediaText, theme.text]}>{t('no_media')}</Text>
         </View>}
     </Section>;
+}
+
+export function AlbumSkeletonRow() {
+    return <View style={styles.skeletonRow}>
+        {[...Array(6)].map((_, i) => <Skeleton key={i} width={128} height={72} style={styles.item} />)}
+    </View>;
 }
 
 export function formatDuration(ms: number) {
@@ -68,6 +75,13 @@ const styles = StyleSheet.create({
         paddingLeft: ipc.platform === 'win32' ? 24 : 20,
         paddingRight: ipc.platform === 'win32' ? 4 : 0,
         flexDirection: 'row',
+    },
+
+    skeletonRow: {
+        paddingBottom: 16,
+        paddingLeft: ipc.platform === 'win32' ? 24 : 20,
+        flexDirection: 'row',
+        overflow: 'hidden',
     },
 
     noMedia: {
@@ -104,10 +118,16 @@ const light = StyleSheet.create({
     text: {
         color: TEXT_COLOUR_LIGHT,
     },
+    thumbnail: {
+        backgroundColor: HIGHLIGHT_COLOUR_LIGHT,
+    },
 });
 
 const dark = StyleSheet.create({
     text: {
         color: TEXT_COLOUR_DARK,
+    },
+    thumbnail: {
+        backgroundColor: HIGHLIGHT_COLOUR_DARK,
     },
 });

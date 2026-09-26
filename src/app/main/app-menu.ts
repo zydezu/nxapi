@@ -115,7 +115,8 @@ export function createWindowMenu(window: BrowserWindow, i18n = appinstance?.i18n
             {
                 id: 'window_refresh',
                 label: i18n?.t('app_menu:refresh') ?? 'Refresh',
-                click: (menuItem, browserWindow, event) => {
+                click: (menuItem, window, event) => {
+                    const browserWindow = window instanceof BrowserWindow ? window : undefined;
                     if (browserWindow && menu_window_supports_refresh.has(browserWindow)) {
                         browserWindow.webContents.send('nxapi:window:refresh');
                     } else {

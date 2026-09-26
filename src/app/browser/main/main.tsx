@@ -1,16 +1,16 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import ipc, { events } from '../ipc.js';
 import { RequestState, useAccentColour, useAsync, useColourScheme, useEventListener, User } from '../util.js';
 import Friends from './friends.js';
 import WebServices from './webservices.js';
 import Event from './event.js';
-import Album from './album.js';
+import Album, { AlbumSkeletonRow } from './album.js';
 import Section from './section.js';
 import { TEXT_COLOUR_DARK, TEXT_COLOUR_LIGHT } from '../constants.js';
-import SetupDiscordPresence from './discord-setup.js';
-import { Button } from '../components/index.js';
+import SetupDiscordPresence, { DiscordPresenceSkeleton } from './discord-setup.js';
+import { Button, Skeleton } from '../components/index.js';
 
 export default function Main(props: {
     user: User;
@@ -65,9 +65,7 @@ export default function Main(props: {
 
     if (!friends || !webservices || !active_event) {
         if (loading) {
-            return <View style={styles.loading}>
-                <ActivityIndicator size="large" color={'#' + accent_colour} />
-            </View>;
+            return <MainSkeleton coral={!!props.user.nso} />;
         }
 
         if (friends_error || webservices_error || active_event_error) {
@@ -95,12 +93,41 @@ export default function Main(props: {
         {props.user.nso ? <SetupDiscordPresence user={props.user} friends={friends} /> : null}
         {props.user.nso && friends ? <Friends user={props.user} friends={friends}
             loading={friends_state === RequestState.LOADING} error={friends_error ?? undefined} /> : null}
-        {props.user.nso && media ? <Album user={props.user} media={media}
+        {props.user.nso && (media || media_state === RequestState.LOADING) ? <Album user={props.user} media={media}
             loading={media_state === RequestState.LOADING} error={media_error ?? undefined} /> : null}
         {props.user.nso && webservices ? <WebServices user={props.user} webservices={webservices}
             loading={webservices_state === RequestState.LOADING} error={webservices_error ?? undefined} /> : null}
         {props.user.nso && active_event && 'id' in active_event ? <Event user={props.user} event={active_event}
             loading={active_event_state === RequestState.LOADING} error={active_event_error ?? undefined} /> : null}
+    </View>;
+}
+
+function MainSkeleton(props: {
+    coral: boolean;
+}) {
+    const { t, i18n } = useTranslation('main_window');
+
+    return <View>
+        {props.coral ? <DiscordPresenceSkeleton /> : null}
+        <Section title={t('friends_section.title')}>
+            <View style={styles.skeletonRow}>
+                {[...Array(6)].map((_, i) => <View key={i} style={styles.skeletonFriend}>
+                    <Skeleton width={50} height={50} radius={25} />
+                    <Skeleton width={46} height={10} style={styles.skeletonLabel} />
+                </View>)}
+            </View>
+        </Section>
+        <Section title={t('album_section.title')}>
+            <AlbumSkeletonRow />
+        </Section>
+        <Section title={t('webservices_section.title')}>
+            <View style={styles.skeletonRow}>
+                {[...Array(4)].map((_, i) => <View key={i} style={styles.skeletonWebService}>
+                    <Skeleton width={120} height={120} radius={ipc.platform === 'win32' ? 0 : 2} />
+                    <Skeleton width={80} height={10} style={styles.skeletonLabel} />
+                </View>)}
+            </View>
+        </Section>
     </View>;
 }
 
@@ -122,16 +149,29 @@ function MoonOnlyUser() {
 }
 
 const styles = StyleSheet.create({
-    loading: {
-        flex: 1,
-        paddingVertical: 16,
-        paddingHorizontal: 20,
-        justifyContent: 'center',
-    },
-
     container: {
         paddingVertical: 16,
         paddingHorizontal: 20,
+    },
+
+    skeletonRow: {
+        paddingBottom: 16,
+        paddingLeft: ipc.platform === 'win32' ? 24 : 20,
+        flexDirection: 'row',
+        overflow: 'hidden',
+    },
+    skeletonFriend: {
+        width: 55,
+        marginRight: 20,
+        alignItems: 'center',
+    },
+    skeletonWebService: {
+        width: 120,
+        marginRight: 14,
+        alignItems: 'center',
+    },
+    skeletonLabel: {
+        marginTop: 12,
     },
 
     moonOnlyUser: {

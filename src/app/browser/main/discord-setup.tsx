@@ -6,7 +6,7 @@ import { getAccounts, RequestState, useAccentColour, useAsync, useColourScheme, 
 import { Friend, PresencePermissions } from '../../../api/coral-types.js';
 import { TEXT_COLOUR_DARK, TEXT_COLOUR_LIGHT } from '../constants.js';
 import Section from './section.js';
-import { Button, NintendoSwitchUser, NintendoSwitchUsers } from '../components/index.js';
+import { Button, NintendoSwitchUser, NintendoSwitchUsers, Skeleton } from '../components/index.js';
 
 export default function SetupDiscordPresence(props: {
     user: User;
@@ -33,7 +33,9 @@ export default function SetupDiscordPresence(props: {
     const friend = source && 'na_id' in source && source.na_id === props.user.user.id && source.friend_nsa_id ?
         props.friends?.find(f => f.nsaId === source.friend_nsa_id) : null;
 
-    if (!props.friends || discord_presence_source_state !== RequestState.LOADED || !users) return null;
+    if (!props.friends || discord_presence_source_state !== RequestState.LOADED || !users) {
+        return <DiscordPresenceSkeleton />;
+    }
 
     const content = !source && added_friends?.length ? <>
         <Text style={[styles.text, theme.text]}>
@@ -82,7 +84,25 @@ export default function SetupDiscordPresence(props: {
     </Section> : null;
 }
 
+export function DiscordPresenceSkeleton() {
+    const { t, i18n } = useTranslation('main_window', { keyPrefix: 'discord_section' });
+
+    return <Section title={t('title')}>
+        <View style={styles.content}>
+            <Skeleton width={340} height={12} style={styles.skeletonText} />
+            <View style={styles.button}>
+                <Skeleton width={72} height={ipc.platform === 'darwin' ? 22 : 32} radius={ipc.platform === 'darwin' ? 5 : 2} />
+            </View>
+        </View>
+    </Section>;
+}
+
 const styles = StyleSheet.create({
+    skeletonText: {
+        maxWidth: '100%',
+        marginVertical: 2,
+    },
+
     content: {
         marginTop: -4,
         paddingBottom: 16,

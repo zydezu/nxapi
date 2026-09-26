@@ -1,4 +1,4 @@
-import { BrowserWindow, clipboard, IpcMain, IpcMainInvokeEvent, KeyboardEvent, Menu, MenuItem, ShareMenu, SharingItem, shell, systemPreferences } from 'electron';
+import { BaseWindow, BrowserWindow, clipboard, IpcMain, IpcMainInvokeEvent, KeyboardEvent, Menu, MenuItem, ShareMenu, SharingItem, shell, systemPreferences } from 'electron';
 import { User } from 'discord-rpc';
 import createDebug from '../../util/debug.js';
 import { ErrorDescription, ErrorDescriptionSymbol, HasErrorDescription } from '../../util/errors.js';
@@ -18,7 +18,7 @@ import type { FriendProps } from '../browser/friend/index.js';
 import type { DiscordSetupProps } from '../browser/discord/index.js';
 import type { AddFriendProps } from '../browser/add-friend/index.js';
 import type { AlbumProps } from '../browser/album/index.js';
-import { copyAlbumImage, saveAlbumItem } from './album.js';
+import { copyAlbumItem, saveAlbumItem, saveAlbumZip } from './album.js';
 import { CoralUser } from '../../common/users.js';
 import { MembershipRequiredError } from '../../common/auth/util.js';
 import { showErrorDialog } from './util.js';
@@ -203,7 +203,9 @@ export function setupIpc(appinstance: App, ipcMain: IpcMain) {
     handle('moon:getcachedtoken', (e, token: string) => storage.getItem('MoonToken.' + token));
 
     handle('album:save', (e, item: Media) => saveAlbumItem(item, BrowserWindow.fromWebContents(e.sender) ?? undefined));
-    handle('album:copy', (e, item: Media) => copyAlbumImage(item));
+    handle('album:copy', (e, item: Media) => copyAlbumItem(item));
+    handle('album:savezip', (e, items: Media[]) =>
+        saveAlbumZip(items, e.sender, BrowserWindow.fromWebContents(e.sender) ?? undefined));
 
     handle('misc:open-url', (e, url: string) => shell.openExternal(url));
     handle('misc:share', (e, item: SharingItem) =>
@@ -214,10 +216,10 @@ export function setupIpc(appinstance: App, ipcMain: IpcMain) {
             .popup({window: BrowserWindow.fromWebContents(e.sender)!}), undefined));
     handle('menu:add-user', e => (Menu.buildFromTemplate([
         new MenuItem({label: t('add_account.add_account_coral')!, click:
-            (item: MenuItem, window: BrowserWindow | undefined, event: KeyboardEvent) =>
+            (item: MenuItem, window: BaseWindow | undefined, event: KeyboardEvent) =>
                 askAddNsoAccount(appinstance, !event.shiftKey)}),
         new MenuItem({label: t('add_account.add_account_moon')!, click:
-            (item: MenuItem, window: BrowserWindow | undefined, event: KeyboardEvent) =>
+            (item: MenuItem, window: BaseWindow | undefined, event: KeyboardEvent) =>
                 askAddPctlAccount(appinstance, !event.shiftKey)}),
     ]).popup({window: BrowserWindow.fromWebContents(e.sender)!}), undefined));
     handle('menu:friend-code', (e, fc: CurrentUserFriendCodeLink) => (Menu.buildFromTemplate([

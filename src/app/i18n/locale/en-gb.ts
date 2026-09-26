@@ -423,6 +423,13 @@ export const album_window = {
     saving: 'Saving...',
     saved: 'Saved',
     copy: 'Copy image',
+    copy_video: 'Copy video',
     copying: 'Copying...',
     copied: 'Copied',
+
+    item_count_one: '{{count}} item',
+    item_count_other: '{{count}} items',
+    download_all: 'Download all',
+    download_progress: 'Downloading {{done}}/{{total}}...',
+    download_done: 'Saved zip',
 };

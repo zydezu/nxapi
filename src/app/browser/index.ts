@@ -22,6 +22,7 @@ style.textContent = `
 :root {
     user-select: none;
     overflow-x: hidden;
+    color-scheme: light dark;
 }
 *:focus-visible {
     outline-style: solid;

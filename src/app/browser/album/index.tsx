@@ -1,12 +1,15 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { ActivityIndicator, Image, ImageStyle, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Image, ImageStyle, Pressable, PressableStateCallbackType, StyleSheet, Text, TouchableOpacity, View, ViewStyle } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import ipc, { events } from '../ipc.js';
 import { RequestState, Root, useAccentColour, useAsync, useColourScheme, useEventListener } from '../util.js';
 import { Media, MediaType } from '../../../api/coral-types.js';
-import { Button } from '../components/index.js';
-import { TEXT_COLOUR_DARK, TEXT_COLOUR_LIGHT } from '../constants.js';
+import { Button, Skeleton } from '../components/index.js';
+import ChevronBack from '../components/icons/chevron-back.js';
+import ChevronForward from '../components/icons/chevron-forward.js';
+import { HIGHLIGHT_COLOUR_DARK, HIGHLIGHT_COLOUR_LIGHT, TEXT_COLOUR_DARK, TEXT_COLOUR_LIGHT } from '../constants.js';
 import { formatDuration } from '../main/album.js';
+import type { AlbumZipProgress } from '../../main/album.js';
 
 export interface AlbumProps {
     /** Nintendo Account ID */
@@ -46,6 +49,24 @@ function Album(props: {
     const media = useMemo(() => props.media ?
         [...props.media].sort((a, b) => b.capturedAt - a.capturedAt) : null, [props.media]);
 
+    // Kept here so progress survives switching between the grid and the viewer
+    const [zip_state, setZipState] = useState(ActionState.IDLE);
+    const [zip_progress, setZipProgress] = useState<AlbumZipProgress | null>(null);
+    useEventListener(events, 'album:zip-progress', setZipProgress, []);
+
+    const downloadAll = useCallback(async () => {
+        if (!media) return;
+        setZipState(ActionState.WORKING);
+        setZipProgress(null);
+        try {
+            const path = await ipc.saveAlbumZip(media);
+            setZipState(path ? ActionState.DONE : ActionState.IDLE);
+        } catch (err) {
+            setZipState(ActionState.IDLE);
+            alert(err);
+        }
+    }, [media]);
+
     const [selected_id, setSelectedId] = useState<string | null>(props.initialItem ?? null);
     useEventListener(events, 'album:select', setSelectedId, []);
 
@@ -80,8 +101,12 @@ function Album(props: {
             </View>;
         }
 
-        return <View style={styles.message}>
-            <ActivityIndicator size="large" color={'#' + accent_colour} />
+        return <View style={styles.grid}>
+            {[...Array(12)].map((_, i) => <View key={i} style={styles.gridItem}>
+                <Skeleton width={200} height={112} />
+                <Skeleton width={140} height={11} style={styles.skeletonTitle} />
+                <Skeleton width={100} height={9} style={styles.skeletonDate} />
+            </View>)}
         </View>;
     }
 
@@ -98,19 +123,30 @@ function Album(props: {
         </View>;
     }
 
-    return <View style={styles.grid}>
-        {media.map(item => <TouchableOpacity key={item.id} onPress={() => setSelectedId(item.id)} style={styles.gridItem}>
-            <View>
-                <Image source={{uri: item.thumbnailUri, width: 200, height: 112}} style={styles.thumbnail as ImageStyle} />
-                {item.type === MediaType.VIDEO ? <View style={styles.videoBadge}>
-                    <Text style={styles.videoBadgeText}>▶ {formatDuration(item.videoDuration)}</Text>
-                </View> : null}
-            </View>
-            <Text style={[styles.gridItemTitle, theme.text]} numberOfLines={1}>{item.appName || t('system')}</Text>
-            <Text style={[styles.gridItemDate, theme.text]}>{new Date(item.capturedAt * 1000).toLocaleString(i18n.language, {
-                dateStyle: 'medium', timeStyle: 'short',
-            })}</Text>
-        </TouchableOpacity>)}
+    return <View>
+        <View style={styles.toolbar}>
+            <Text style={[styles.toolbarText, theme.text]}>{t('item_count', {count: media.length})}</Text>
+            <Button title={zip_state === ActionState.WORKING ? zip_progress ?
+                    t('download_progress', {done: zip_progress.done, total: zip_progress.total}) : t('download_all') :
+                zip_state === ActionState.DONE ? t('download_done') : t('download_all')}
+                onPress={zip_state === ActionState.WORKING ? undefined : downloadAll}
+                color={'#' + accent_colour} primary={zip_state !== ActionState.WORKING} />
+        </View>
+
+        <View style={styles.grid}>
+            {media.map(item => <TouchableOpacity key={item.id} onPress={() => setSelectedId(item.id)} style={styles.gridItem}>
+                <View>
+                    <Image source={{uri: item.thumbnailUri, width: 200, height: 112}} style={[styles.thumbnail, theme.placeholder] as ImageStyle} />
+                    {item.type === MediaType.VIDEO ? <View style={styles.videoBadge}>
+                        <Text style={styles.videoBadgeText}>▶ {formatDuration(item.videoDuration)}</Text>
+                    </View> : null}
+                </View>
+                <Text style={[styles.gridItemTitle, theme.text]} numberOfLines={1}>{item.appName || t('system')}</Text>
+                <Text style={[styles.gridItemDate, theme.text]}>{new Date(item.capturedAt * 1000).toLocaleString(i18n.language, {
+                    dateStyle: 'medium', timeStyle: 'short',
+                })}</Text>
+            </TouchableOpacity>)}
+        </View>
     </View>;
 }
 
@@ -152,7 +188,7 @@ function Viewer(props: {
     const copy = useCallback(async () => {
         setCopyState(ActionState.WORKING);
         try {
-            await ipc.copyAlbumImage(props.item);
+            await ipc.copyAlbumItem(props.item);
             setCopyState(ActionState.DONE);
         } catch (err) {
             setCopyState(ActionState.IDLE);
@@ -162,12 +198,27 @@ function Viewer(props: {
 
     const item = props.item;
 
+    const [media_hovered, setMediaHovered] = useState(false);
+
     return <View style={styles.viewer}>
-        <View style={styles.viewerMedia}>
+        <View style={styles.viewerMedia}
+            // @ts-expect-error react-native-web
+            onMouseEnter={() => setMediaHovered(true)}
+            onMouseLeave={() => setMediaHovered(false)}
+        >
             {item.type === MediaType.VIDEO ?
                 <video key={item.id} src={item.contentUri} poster={item.thumbnailUri} controls autoPlay
                     style={{width: '100%', height: '100%', objectFit: 'contain'}} /> :
-                <Image source={{uri: item.contentUri}} resizeMode="contain" style={styles.viewerImage as ImageStyle} />}
+                <View style={styles.viewerImage}>
+                    {/* The thumbnail is usually cached, so show it until the full image loads */}
+                    <Image source={{uri: item.thumbnailUri}} resizeMode="contain" style={StyleSheet.absoluteFill as ImageStyle} />
+                    <Image key={item.id} source={{uri: item.contentUri}} resizeMode="contain" style={StyleSheet.absoluteFill as ImageStyle} />
+                </View>}
+
+            {props.onPrevious ? <ViewerArrow onPress={props.onPrevious} visible={media_hovered}
+                style={styles.arrowPrevious}><ChevronBack title={t('previous')!} /></ViewerArrow> : null}
+            {props.onNext ? <ViewerArrow onPress={props.onNext} visible={media_hovered}
+                style={styles.arrowNext}><ChevronForward title={t('next')!} /></ViewerArrow> : null}
         </View>
 
         <View style={styles.viewerDetails}>
@@ -191,17 +242,12 @@ function Viewer(props: {
                 <View style={styles.button}>
                     <Button title={t('back')} onPress={props.onBack} />
                 </View>
-                {props.onPrevious ? <View style={styles.button}>
-                    <Button title={t('previous')} onPress={props.onPrevious} />
-                </View> : null}
-                {props.onNext ? <View style={styles.button}>
-                    <Button title={t('next')} onPress={props.onNext} />
-                </View> : null}
-                {item.type === MediaType.IMAGE ? <View style={styles.button}>
+                <View style={styles.button}>
                     <Button title={t(copy_state === ActionState.WORKING ? 'copying' :
-                        copy_state === ActionState.DONE ? 'copied' : 'copy')}
+                        copy_state === ActionState.DONE ? 'copied' :
+                        item.type === MediaType.VIDEO ? 'copy_video' : 'copy')}
                         onPress={copy_state === ActionState.WORKING ? undefined : copy} />
-                </View> : null}
+                </View>
                 <View style={styles.button}>
                     <Button title={t(save_state === ActionState.WORKING ? 'saving' :
                         save_state === ActionState.DONE ? 'saved' : 'save')}
@@ -212,6 +258,35 @@ function Viewer(props: {
         </View>
     </View>;
 }
+
+function ViewerArrow(props: React.PropsWithChildren<{
+    onPress: () => void;
+    visible: boolean;
+    style: ViewStyle;
+}>) {
+    // react-native-web also passes hovered and focused
+    const style = useCallback((state: PressableStateCallbackType) => {
+        const { hovered, focused } = state as PressableStateCallbackType & {hovered?: boolean; focused?: boolean};
+
+        return [
+            styles.arrow, arrow_web_style, props.style,
+            hovered ? styles.arrowHovered : null,
+            state.pressed ? styles.arrowPressed : null,
+            {opacity: props.visible || hovered || focused ? 1 : 0},
+        ];
+    }, [props.style, props.visible]);
+
+    return <Pressable onPress={props.onPress} style={style}>
+        <Text style={styles.arrowIcon}>{props.children}</Text>
+    </Pressable>;
+}
+
+const arrow_web_style = {
+    transitionProperty: 'opacity, background-color, transform',
+    transitionDuration: '150ms',
+    backdropFilter: 'blur(8px)',
+    boxShadow: '0 2px 8px rgba(0, 0, 0, 0.35)',
+} as ViewStyle;
 
 const styles = StyleSheet.create({
     message: {
@@ -224,6 +299,18 @@ const styles = StyleSheet.create({
     messageText: {
         marginBottom: 16,
         textAlign: 'center',
+    },
+
+    toolbar: {
+        paddingTop: 16,
+        paddingHorizontal: ipc.platform === 'win32' ? 24 : 20,
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
+    toolbarText: {
+        flex: 1,
+        fontSize: 13,
+        opacity: 0.7,
     },
 
     grid: {
@@ -239,6 +326,12 @@ const styles = StyleSheet.create({
     },
     thumbnail: {
         borderRadius: 4,
+    },
+    skeletonTitle: {
+        marginTop: 8,
+    },
+    skeletonDate: {
+        marginTop: 6,
     },
     gridItemTitle: {
         marginTop: 6,
@@ -274,6 +367,36 @@ const styles = StyleSheet.create({
     viewerImage: {
         flex: 1,
     },
+    arrow: {
+        position: 'absolute',
+        top: '50%',
+        width: 44,
+        height: 44,
+        marginTop: -22,
+        borderRadius: 22,
+        borderWidth: 1,
+        borderColor: 'rgba(255, 255, 255, 0.18)',
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: 'rgba(20, 20, 20, 0.45)',
+    },
+    arrowHovered: {
+        backgroundColor: 'rgba(20, 20, 20, 0.7)',
+        transform: [{scale: 1.08}],
+    },
+    arrowPressed: {
+        transform: [{scale: 0.95}],
+    },
+    arrowPrevious: {
+        left: 16,
+    },
+    arrowNext: {
+        right: 16,
+    },
+    arrowIcon: {
+        color: '#ffffff',
+        fontSize: 18,
+    },
     viewerDetails: {
         paddingVertical: 14,
         paddingHorizontal: ipc.platform === 'win32' ? 24 : 20,
@@ -308,10 +431,16 @@ const light = StyleSheet.create({
     text: {
         color: TEXT_COLOUR_LIGHT,
     },
+    placeholder: {
+        backgroundColor: HIGHLIGHT_COLOUR_LIGHT,
+    },
 });
 
 const dark = StyleSheet.create({
     text: {
         color: TEXT_COLOUR_DARK,
+    },
+    placeholder: {
+        backgroundColor: HIGHLIGHT_COLOUR_DARK,
     },
 });

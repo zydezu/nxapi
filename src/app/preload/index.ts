@@ -14,6 +14,7 @@ import type { DiscordSetupProps } from '../browser/discord/index.js';
 import type { FriendProps } from '../browser/friend/index.js';
 import type { AddFriendProps } from '../browser/add-friend/index.js';
 import type { AlbumProps } from '../browser/album/index.js';
+import type { AlbumZipProgress } from '../main/album.js';
 import { NintendoAccountUserCoral } from '../../api/coral.js';
 import { NintendoAccountUserMoon } from '../../api/moon.js';
 
@@ -106,7 +107,8 @@ const ipc = {
     share: (item: SharingItem) => inv('misc:share', item),
 
     saveAlbumItem: (item: Media) => inv<string | null>('album:save', item),
-    copyAlbumImage: (item: Media) => inv('album:copy', item),
+    copyAlbumItem: (item: Media) => inv('album:copy', item),
+    saveAlbumZip: (items: Media[]) => inv<string | null>('album:savezip', items),
 
     showUserMenu: (user: NintendoAccountUserCoral | NintendoAccountUserMoon, nso?: CurrentUser<true> | CurrentUser<false>, moon?: boolean) => inv('menu:user', user, nso, moon),
     showAddUserMenu: () => inv('menu:add-user'),
@@ -132,6 +134,7 @@ ipcRenderer.on('nxapi:discord:shouldrefresh', () => events.emit('update-discord-
 ipcRenderer.on('nxapi:discord:presence', (e, p: DiscordPresence) => events.emit('update-discord-presence', p));
 ipcRenderer.on('nxapi:discord:user', (e, u: User) => events.emit('update-discord-user', u));
 ipcRenderer.on('nxapi:album:select', (e, id: string) => events.emit('album:select', id));
+ipcRenderer.on('nxapi:album:zip-progress', (e, progress: AlbumZipProgress) => events.emit('album:zip-progress', progress));
 ipcRenderer.on('nxapi:discord:status', (e, s: DiscordStatus | null) => events.emit('update-discord-status', s));
 
 let language: string | undefined = invSync('app:language');

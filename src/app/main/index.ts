@@ -47,16 +47,11 @@ export const login_item_options: Settings = {
 };
 
 enum LoginItemType {
-    NATIVE,
     NATIVE_PARTIAL,
     NOT_SUPPORTED,
 }
 const login_item_type: LoginItemType =
-    process.platform === 'darwin' ?
-        // macOS 13+ does not support open as hidden
-        parseInt(process.getSystemVersion().split('.', 1)[0]) >= 13 ?
-            LoginItemType.NATIVE_PARTIAL : LoginItemType.NATIVE :
-    process.platform === 'win32' ? LoginItemType.NATIVE_PARTIAL :
+    process.platform === 'darwin' || process.platform === 'win32' ? LoginItemType.NATIVE_PARTIAL :
     LoginItemType.NOT_SUPPORTED;
 
 const was_opened_at_login = process.platform === 'darwin' ?
@@ -305,9 +300,7 @@ export async function init() {
 
     debug('App started');
 
-    const should_hide =
-        login_item_type === LoginItemType.NATIVE ? app.getLoginItemSettings(login_item_options).wasOpenedAsHidden :
-        was_opened_at_login && (await appinstance.store.getLoginItem()).startup_hidden;
+    const should_hide = was_opened_at_login && (await appinstance.store.getLoginItem()).startup_hidden;
 
     if (!should_hide) {
         appinstance.showMainWindow();
@@ -484,15 +477,6 @@ export class Store extends EventEmitter {
     async getLoginItem(): Promise<LoginItem> {
         const settings = app.getLoginItemSettings(login_item_options);
 
-        if (login_item_type === LoginItemType.NATIVE) {
-            // Fully supported
-            return {
-                supported: true,
-                startup_enabled: settings.openAtLogin,
-                startup_hidden: settings.openAsHidden,
-            };
-        }
-
         const startup_options: SavedStartupOptions | undefined = await this.storage.getItem('StartupOptions');
 
         if (login_item_type === LoginItemType.NATIVE_PARTIAL) {
@@ -512,16 +496,6 @@ export class Store extends EventEmitter {
     }
 
     async setLoginItem(settings: LoginItemOptions) {
-        if (login_item_type === LoginItemType.NATIVE) {
-            // Fully supported
-            app.setLoginItemSettings({
-                ...login_item_options,
-                openAtLogin: settings.startup_enabled,
-                openAsHidden: settings.startup_hidden,
-            });
-            return;
-        }
-
         if (login_item_type === LoginItemType.NATIVE_PARTIAL) {
             // Partial native support
             app.setLoginItemSettings({
