@@ -271,7 +271,6 @@ function ViewerArrow(props: React.PropsWithChildren<{
         return [
             styles.arrow, arrow_web_style, props.style,
             hovered ? styles.arrowHovered : null,
-            state.pressed ? styles.arrowPressed : null,
             {opacity: props.visible || hovered || focused ? 1 : 0},
         ];
     }, [props.style, props.visible]);
@@ -282,8 +281,6 @@ function ViewerArrow(props: React.PropsWithChildren<{
 }
 
 const arrow_web_style = {
-    transitionProperty: 'opacity, background-color, transform',
-    transitionDuration: '150ms',
     backdropFilter: 'blur(8px)',
     boxShadow: '0 2px 8px rgba(0, 0, 0, 0.35)',
 } as ViewStyle;
@@ -382,10 +379,6 @@ const styles = StyleSheet.create({
     },
     arrowHovered: {
         backgroundColor: 'rgba(20, 20, 20, 0.7)',
-        transform: [{scale: 1.08}],
-    },
-    arrowPressed: {
-        transform: [{scale: 0.95}],
     },
     arrowPrevious: {
         left: 16,
