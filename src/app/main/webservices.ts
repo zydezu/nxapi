@@ -15,6 +15,7 @@ import { CoralApiInterface, CoralAuthData } from '../../api/coral.js';
 import { WebService, WebServiceToken } from '../../api/coral-types.js';
 import { SavedToken } from '../../common/auth/coral.js';
 import { checkMembershipActive } from '../../common/auth/util.js';
+import { formatWindowTitle } from '../common/title.js';
 
 const debug = createDebug('app:main:webservices');
 
@@ -44,10 +45,7 @@ export default async function openWebService(
     const verifymembership = webservice.customAttributes.find(a => a.attrKey === 'verifyMembership');
     if (verifymembership?.attrValue === 'true') checkMembershipActive(data);
 
-    const user_title_prefix = '[' + data.user.nickname +
-        (data.nsoAccount.user.name !== data.user.nickname ? '/' + data.nsoAccount.user.name : '') + '] ';
-
-    const window = createWebServiceWindow(data.nsoAccount.user.nsaId, webservice, user_title_prefix);
+    const window = createWebServiceWindow(data.nsoAccount.user.nsaId, webservice);
 
     windows.set(windowid, window);
     windowapi.set(window.webContents, [store, token, coral, data, webservice]);
@@ -71,7 +69,7 @@ export default async function openWebService(
     });
 
     window.on('page-title-updated', (event, title, explicitSet) => {
-        window.setTitle(user_title_prefix + (explicitSet ? title : webservice.name));
+        window.setTitle(formatWindowTitle(explicitSet ? title : webservice.name));
         event.preventDefault();
     });
 

@@ -9,7 +9,7 @@ import createDebug from '../util/debug.js';
 import { timeoutSignal } from '../util/misc.js';
 import { getUserAgent } from '../util/useragent.js';
 import { paths } from '../util/storage.js';
-import { dev, dir, embedded_default_remote_config, git, version } from '../util/product.js';
+import { dev, dir, embedded_default_remote_config, git, release, version } from '../util/product.js';
 import { CONFIG_URL } from './constants.js';
 
 const debug = createDebug('nxapi:remote-config');
@@ -232,7 +232,10 @@ export const cache =
     await loadRemoteConfig();
 const config = debug_fixed_config ?? cache?.data ?? default_config;
 
-if (cache && !config.require_version.includes(version)) {
+// ignore release version enforcement
+const official_release = !!release && /^v\d+\.\d+\.\d+/.test(release);
+
+if (cache && official_release && !config.require_version.includes(version)) {
     throw new Error('nxapi update required');
 }
 

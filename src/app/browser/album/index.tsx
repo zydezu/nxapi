@@ -20,14 +20,12 @@ export interface AlbumProps {
 
 export default function AlbumWindow(props: AlbumProps) {
     const [token] = useAsync(useCallback(() => ipc.getNintendoAccountCoralToken(props.user), [ipc, props.user]));
-    const [user] = useAsync(useCallback(() => token ?
-        ipc.getSavedCoralToken(token) : Promise.resolve(null), [ipc, token]));
     const [media, media_error, media_state, forceRefreshMedia] = useAsync(useCallback(() => token ?
         ipc.getCoralMedia(token) : Promise.resolve(null), [ipc, token]));
 
     useEventListener(events, 'window:refresh', forceRefreshMedia, []);
 
-    return <Root title={i18n => i18n.t('album_window:title')} titleUser={user ?? undefined} scrollable
+    return <Root title={i18n => i18n.t('album_window:title')} scrollable
         i18nNamespace="album_window"
     >
         <Album media={media} error={media_error} loading={media_state === RequestState.LOADING}

@@ -32,20 +32,20 @@ NODE_ENV=production npx rollup --config
 npx electron-builder build --linux "${targets[@]}" --publish never
 
 version="$(node -p "require('./package.json').version")"
-appimage="dist/app/package/Nintendo Switch Online-$version.AppImage"
+appimage="dist/app/package/nxapi-$version.AppImage"
 
 if $install; then
     if [ ! -f "$appimage" ]; then
         echo "error: --install needs the appimage target" >&2
         exit 1
     fi
-    if pgrep -f "Nintendo Switch Online" > /dev/null; then
-        echo "error: Nintendo Switch Online is running; quit it (including from the tray) and run again" >&2
+    if pgrep -f 'nxapi-app|Nintendo Switch Online' > /dev/null; then
+        echo "error: nxapi is running; quit it (including from the tray) and run again" >&2
         exit 1
     fi
     mkdir -p "$HOME/Applications"
-    cp "$appimage" "$HOME/Applications/Nintendo Switch Online"
-    echo "Installed to ~/Applications/Nintendo Switch Online"
+    cp "$appimage" "$HOME/Applications/nxapi"
+    echo "Installed to ~/Applications/nxapi"
 fi
 
 echo "Built:"

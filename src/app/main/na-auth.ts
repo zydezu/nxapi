@@ -4,6 +4,7 @@ import { App, protocol_registration_options } from './index.js';
 import { createModalWindow } from './windows.js';
 import { tryGetNativeImageFromUrl } from './util.js';
 import { WindowType } from '../common/types.js';
+import { formatWindowTitle } from '../common/title.js';
 import { NintendoAccountAuthErrorResponse, NintendoAccountSessionAuthorisation, NintendoAccountSessionAuthorisationError, NintendoAccountSessionToken } from '../../api/na.js';
 import { NintendoAccountSessionAuthorisationCoral } from '../../api/coral.js';
 import { NintendoAccountSessionAuthorisationMoon } from '../../api/moon.js';
@@ -35,7 +36,7 @@ export function createAuthWindow(app: App) {
         resizable: false,
         maximizable: false,
         fullscreenable: false,
-        title: app.i18n.t('na_auth:window.title') ?? 'Nintendo Account',
+        title: formatWindowTitle(app.i18n.t('na_auth:window.title') ?? 'Nintendo Account'),
         webPreferences: {
             session: browser_session,
             scrollBounce: true,

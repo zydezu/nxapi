@@ -1,7 +1,7 @@
 import { CREDITS_NOTICE, LICENCE_NOTICE } from '../../../common/constants.js';
 
 export const app = {
-    default_title: 'Nintendo Switch Online',
+    default_title: 'nxapi',
 
     licence: LICENCE_NOTICE,
     credits: CREDITS_NOTICE,

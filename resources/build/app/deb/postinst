@@ -1,12 +1,12 @@
 #!/bin/bash
 
-ln -sf '/opt/Nintendo Switch Online/nxapi' '/usr/bin/nxapi'
+ln -sf '/opt/nxapi/nxapi' '/usr/bin/nxapi'
 
 # Link to the binary
-ln -sf '/opt/Nintendo Switch Online/nxapi-app' '/usr/bin/nxapi-app'
+ln -sf '/opt/nxapi/nxapi-app' '/usr/bin/nxapi-app'
 
 # SUID chrome-sandbox for Electron 5+
-chmod 4755 '/opt/Nintendo Switch Online/chrome-sandbox' || true
+chmod 4755 '/opt/nxapi/chrome-sandbox' || true
 
 update-mime-database /usr/share/mime || true
 update-desktop-database /usr/share/applications || true

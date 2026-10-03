@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Run as /opt/Nintendo Switch Online/nxapi
+# Run as /opt/nxapi/nxapi
 
 APP_BUNDLE_PATH="$(dirname "$0")"
 export ELECTRON_RUN_AS_NODE=1

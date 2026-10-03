@@ -46,7 +46,7 @@ export default function FriendWindow(props: FriendProps) {
     if (friends && !friend) throw new Error('Unknown friend');
 
     if (!user || !friend || discord_presence_source_state !== RequestState.LOADED) {
-        return <Root title={friend?.name} titleUser={user ?? undefined}
+        return <Root title={friend?.name}
             autoresize={!!user && discord_presence_source_state === RequestState.LOADED}
             i18nNamespace={['friend_window', 'time_since']}
         >
@@ -62,7 +62,7 @@ export default function FriendWindow(props: FriendProps) {
     const can_see_user_presence = user.nsoAccount.user.permissions.presence === PresencePermissions.FRIENDS ||
         (user.nsoAccount.user.permissions.presence === PresencePermissions.FAVORITE_FRIENDS && friend.isFavoriteFriend);
 
-    return <Root title={friend.name} titleUser={user} autoresize i18nNamespace={['friend_window', 'time_since']}>
+    return <Root title={friend.name} autoresize i18nNamespace={['friend_window', 'time_since']}>
         <Friend
             friend={friend} canSeeUserPresence={can_see_user_presence}
             showDiscordPresenceSetup={discord_presence_active || !!friend.presence.updatedAt || false}

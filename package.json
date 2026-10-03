@@ -1,6 +1,6 @@
 {
     "name": "nxapi",
-    "version": "1.7.0",
+    "version": "1.8.0",
     "description": "Nintendo Switch app APIs",
     "license": "AGPL-3.0-or-later",
     "author": "Ellie <ellie+nxapi@fancy.org.uk>",
@@ -95,7 +95,8 @@
     },
     "build": {
         "appId": "uk.org.fancy.nxapi.app",
-        "productName": "Nintendo Switch Online",
+        "productName": "nxapi",
+        "icon": "resources/icon.png",
         "copyright": "Copyright © 2023 Ellie",
         "npmRebuild": false,
         "files": [

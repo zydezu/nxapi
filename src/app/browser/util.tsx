@@ -12,12 +12,14 @@ import { SavedMoonToken } from '../../common/auth/moon.js';
 import { DiscordPresence } from '../../discord/types.js';
 import ipc, { events } from './ipc.js';
 import { BACKGROUND_COLOUR_MAIN_DARK, BACKGROUND_COLOUR_MAIN_LIGHT, DEFAULT_ACCENT_COLOUR } from './constants.js';
+import { formatWindowTitle } from '../common/title.js';
 import createI18n from '../i18n/index.js';
 
 export const WindowFocusedContext = React.createContext(false);
 
 export function Root(props: React.PropsWithChildren<{
     title?: string | ((i18n: i18n) => string);
+    /** Only used when no `title` is given: the user's nickname becomes the title, as in `nxapi - toad` */
     titleUser?: User | SavedToken;
     style?: StyleProp<ViewStyle>;
     scrollable?: boolean;
@@ -82,13 +84,12 @@ export function Root(props: React.PropsWithChildren<{
         document.documentElement.style.overflowY = props.scrollable ? 'auto' : 'hidden';
     }, [props.scrollable]);
 
-    const title_user_prefix = useMemo(() => {
+    const title_user = useMemo(() => {
         const user_na = props.titleUser?.user;
         const user_nso = (props.titleUser && 'nso' in props.titleUser ? props.titleUser.nso : props.titleUser)?.nsoAccount.user;
 
-        return user_na ? '[' + user_na.nickname +
-            (user_nso && user_nso.name !== user_na.nickname ? '/' + user_nso.name : '') +
-        '] ' : '';
+        return user_na ? user_na.nickname +
+            (user_nso && user_nso.name !== user_na.nickname ? '/' + user_nso.name : '') : null;
     }, [props.titleUser]);
 
     if (!i18n) return null;
@@ -115,9 +116,11 @@ export function Root(props: React.PropsWithChildren<{
         <AccentColourContext.Provider value={accent_colour ?? DEFAULT_ACCENT_COLOUR}>
             <WindowFocusedContext.Provider value={window_focused}>
                 <I18nextProvider i18n={i18n}>
-                    <WindowTitle title={title_user_prefix + (
-                        typeof props.title === 'function' ? props.title.call(null, i18n) :
-                        props.title ?? i18n.t('app:default_title'))} />
+                    {/* translated page names and nicknames are lowercased for the `nxapi - page` style, names
+                        passed in directly keep their capitalisation */}
+                    <WindowTitle title={formatWindowTitle(
+                        typeof props.title === 'function' ? props.title.call(null, i18n).toLowerCase() :
+                        props.title ?? title_user?.toLowerCase(), i18n.t('app:default_title'))} />
 
                     {content}
                 </I18nextProvider>
