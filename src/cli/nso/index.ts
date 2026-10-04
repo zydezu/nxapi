@@ -7,7 +7,7 @@ import * as commands from './commands.js';
 const debug = createDebug('cli:nso');
 
 export const command = 'nso <command>';
-export const desc = 'Nintendo Switch Online';
+export const desc = 'nxapi';
 
 export function builder(yargs: Argv<ParentArguments>) {
     for (const command of Object.values(commands)) {

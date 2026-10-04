@@ -1,8 +1,8 @@
 
-Nintendo Switch Online
+nxapi
 ---
 
-### Login to the Nintendo Switch Online app
+### Login to the nxapi app
 
 ```sh
 # Interactive login
@@ -107,7 +107,7 @@ nxapi nso lookup 0000-0000-0000 --json-pretty-print
 nxapi nso add-friend 0000-0000-0000
 ```
 
-### Nintendo Switch Online app announcements/alerts
+### nxapi app announcements/alerts
 
 ```sh
 # Show app announcements in a table
@@ -137,7 +137,7 @@ nxapi nso webservicetoken 5741031244955648 --json-pretty-print
 
 ### API proxy server
 
-Use this to access the Nintendo Switch Online app API from a browser/other HTTP client easily.
+Use this to access the nxapi app API from a browser/other HTTP client easily.
 
 ```sh
 # Start the server listening on all interfaces on a random port
@@ -564,7 +564,7 @@ nxapi pctl auth
 
 # Login with an existing token
 # Use with a token obtained via MITM the app, or with `nxapi pctl auth --no-auth`
-# The same session token as for the Nintendo Switch Online app cannot be used
+# The same session token as for the nxapi app cannot be used
 nxapi pctl token
 
 # Get the authenticated user

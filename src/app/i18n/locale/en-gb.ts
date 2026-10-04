@@ -20,7 +20,7 @@ export const app_menu = {
 };
 
 export const menu_app = {
-    coral_heading: 'Nintendo Switch Online',
+    coral_heading: 'nxapi',
     na_id: 'Nintendo Account ID: {{id}}',
     coral_id: 'Coral ID: {{id}}',
     nsa_id: 'NSA ID: {{id}}',
