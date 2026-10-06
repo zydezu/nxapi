@@ -30,7 +30,7 @@ const default_config: NxapiRemoteConfig = {
 };
 
 async function loadRemoteConfig() {
-    await fs.mkdir(paths.cache, {recursive: true});
+    await fs.mkdir(paths.cache, { recursive: true });
     const config_cache_path = path.resolve(paths.cache, 'config.json');
 
     const url = process.env.NXAPI_CONFIG_URL ?? CONFIG_URL;
@@ -94,7 +94,7 @@ async function loadRemoteConfig() {
             // Response is stale, but not expired
             must_revalidate = false;
         }
-    } catch (err) {}
+    } catch (err) { }
 
     try {
         debug('Getting remote config from %s, must revalidate: %s', url, must_revalidate);
@@ -116,8 +116,8 @@ async function loadRemoteConfig() {
         const stale_at = max_age ? Date.now() + (max_age * 1000) : null;
         const expires_at =
             cache_directives.includes('no-store') || cache_directives.includes('no-cache') ? 0 :
-            stale_ie && max_age ? Date.now() + (max_age * 1000) + (stale_ie * 1000) :
-            stale_at ?? 0;
+                stale_ie && max_age ? Date.now() + (max_age * 1000) + (stale_ie * 1000) :
+                    stale_at ?? 0;
 
         const new_cache: RemoteConfigCacheData = {
             created_at: config[CachedSymbol] ? data!.created_at : Date.now(),
@@ -199,17 +199,17 @@ async function tryLoadRemoteConfig() {
 
 const debug_fixed_config: NxapiRemoteConfig | null =
     !dev ? null :
-    await fs.readFile(path.join(paths.data, 'remote-config.json'), 'utf-8').then(JSON.parse).then(data => {
-        return Object.assign(data, {
-            [SourceSymbol]: new URL(path.join(paths.data, 'remote-config.json'), 'file:///').toString(),
-        });
-    }).catch(err => {
-        if (err.code === 'ENOENT') return null;
+        await fs.readFile(path.join(paths.data, 'remote-config.json'), 'utf-8').then(JSON.parse).then(data => {
+            return Object.assign(data, {
+                [SourceSymbol]: new URL(path.join(paths.data, 'remote-config.json'), 'file:///').toString(),
+            });
+        }).catch(err => {
+            if (err.code === 'ENOENT') return null;
 
-        debug('Error reading local debug config');
-        console.warn('Error reading local debug configuration', err);
-        return null;
-    }) || null;
+            debug('Error reading local debug config');
+            console.warn('Error reading local debug configuration', err);
+            return null;
+        }) || null;
 
 export enum RemoteConfigMode {
     /** Always use local configuration */
@@ -222,21 +222,21 @@ export enum RemoteConfigMode {
 
 export const mode =
     process.env.NXAPI_ENABLE_REMOTE_CONFIG === '0' ? RemoteConfigMode.DISABLE :
-    process.env.NXAPI_REMOTE_CONFIG_FALLBACK === '1' ? RemoteConfigMode.OPPORTUNISTIC :
-    RemoteConfigMode.REQUIRE;
+        process.env.NXAPI_REMOTE_CONFIG_FALLBACK === '1' ? RemoteConfigMode.OPPORTUNISTIC :
+            RemoteConfigMode.REQUIRE;
 
 export const cache =
     debug_fixed_config ? null :
-    mode === RemoteConfigMode.DISABLE ? null :
-    mode === RemoteConfigMode.OPPORTUNISTIC ? await tryLoadRemoteConfig() :
-    await loadRemoteConfig();
+        mode === RemoteConfigMode.DISABLE ? null :
+            mode === RemoteConfigMode.OPPORTUNISTIC ? await tryLoadRemoteConfig() :
+                await loadRemoteConfig();
 const config = debug_fixed_config ?? cache?.data ?? default_config;
 
 // ignore release version enforcement
 const official_release = !!release && /^v\d+\.\d+\.\d+/.test(release);
 
 if (cache && official_release && !config.require_version.includes(version)) {
-    throw new Error('nxapi update required');
+    debug('nxapi version %s is not in the remote require_version list; continuing anyway', version);
 }
 
 export default config;
