@@ -90,12 +90,10 @@ jobs:
 
   windows_x64:
     name: Build Windows x64
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
+    container: electronuserland/builder:wine
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
       - run: npm ci --force
       - run: npx tsc
       - run: npx rollup --config
@@ -112,12 +110,10 @@ jobs:
 
   windows_arm64:
     name: Build Windows ARM64
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
+    container: electronuserland/builder:wine
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
       - run: npm ci --force
       - run: npx tsc
       - run: npx rollup --config
