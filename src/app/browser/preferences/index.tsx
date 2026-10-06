@@ -8,7 +8,7 @@ import { DEFAULT_ACCENT_COLOUR, HIGHLIGHT_COLOUR_DARK, HIGHLIGHT_COLOUR_LIGHT, T
 import ipc, { events } from '../ipc.js';
 import { getAccounts, RequestState, Root, useAccentColour, useAsync, useColourScheme, useDiscordPresenceSource, useEventListener } from '../util.js';
 
-export interface PreferencesProps {}
+export interface PreferencesProps { }
 
 export default function PreferencesWindow(props: PreferencesProps) {
     return <Root
@@ -25,19 +25,19 @@ function _Preferences(props: {
     const accent_colour = useAccentColour();
     const { t, i18n, ready } = useTranslation('preferences_window');
 
-    const [users, ,, forceRefreshAccounts] = useAsync(useCallback(() => getAccounts(), [ipc]));
+    const [users, , , forceRefreshAccounts] = useAsync(useCallback(() => getAccounts(), [ipc]));
     useEventListener(events, 'update-nintendo-accounts', forceRefreshAccounts, []);
 
-    const [login_item, ,, forceRefreshLoginItem] = useAsync(useCallback(() => ipc.getLoginItemSettings(), [ipc]));
+    const [login_item, , , forceRefreshLoginItem] = useAsync(useCallback(() => ipc.getLoginItemSettings(), [ipc]));
 
     const [show_error_alerts, , show_error_alerts_state, forceRefreshErrorAlerts] = useAsync(useCallback(() => ipc.getShowErrorAlerts(), [ipc]));
 
     const setOpenAtLogin = useCallback(async (open_at_login: boolean | 'mixed') => {
-        await ipc.setLoginItemSettings({...login_item!, startup_enabled: !!open_at_login});
+        await ipc.setLoginItemSettings({ ...login_item!, startup_enabled: !!open_at_login });
         forceRefreshLoginItem();
     }, [ipc, login_item]);
     const setOpenAsHidden = useCallback(async (open_as_hidden: boolean | 'mixed') => {
-        await ipc.setLoginItemSettings({...login_item!, startup_hidden: !!open_as_hidden});
+        await ipc.setLoginItemSettings({ ...login_item!, startup_hidden: !!open_as_hidden });
         forceRefreshLoginItem();
     }, [ipc, login_item]);
 
@@ -63,31 +63,35 @@ function _Preferences(props: {
 
     const setDiscordUser = useCallback(async (user: string | undefined) => {
         if (user === '*') user = undefined;
-        await ipc.setDiscordPresenceOptions({...discord_options, user});
+        await ipc.setDiscordPresenceOptions({ ...discord_options, user });
         forceRefreshDiscordOptions();
     }, [ipc, discord_options]);
     const setDiscordFriendCode = useCallback(async (friend_code: string | undefined) => {
         setDiscordFriendCodeValue(friend_code ?? '');
         if (friend_code && !friend_code.match(/^\d{4}-\d{4}-\d{4}$/)) return;
         if (!friend_code) friend_code = undefined;
-        await ipc.setDiscordPresenceOptions({...discord_options, friend_code});
+        await ipc.setDiscordPresenceOptions({ ...discord_options, friend_code });
         forceRefreshDiscordOptions();
     }, [ipc, discord_options]);
     const setDiscordShowConsoleOnline = useCallback(async (show_console_online: boolean | 'mixed') => {
-        await ipc.setDiscordPresenceOptions({...discord_options, show_console_online: !!show_console_online});
+        await ipc.setDiscordPresenceOptions({ ...discord_options, show_console_online: !!show_console_online });
         forceRefreshDiscordOptions();
     }, [ipc, discord_options]);
     const setDiscordShowConsole = useCallback(async (show_console: boolean | 'mixed') => {
-        await ipc.setDiscordPresenceOptions({...discord_options, show_console: !!show_console});
+        await ipc.setDiscordPresenceOptions({ ...discord_options, show_console: !!show_console });
         forceRefreshDiscordOptions();
     }, [ipc, discord_options]);
     const setDiscordShowPlayTime = useCallback(async (show_play_time: DiscordPresencePlayTime) => {
-        await ipc.setDiscordPresenceOptions({...discord_options, show_play_time});
+        await ipc.setDiscordPresenceOptions({ ...discord_options, show_play_time });
         forceRefreshDiscordOptions();
     }, [ipc, discord_options]);
     const setDiscordEnableSplatNet3Monitor = useCallback(async (enable_splatnet3_monitoring: boolean | 'mixed') => {
-        await ipc.setDiscordPresenceOptions({...discord_options, monitors: {...discord_options?.monitors,
-            enable_splatnet3_monitoring: !!enable_splatnet3_monitoring}});
+        await ipc.setDiscordPresenceOptions({
+            ...discord_options, monitors: {
+                ...discord_options?.monitors,
+                enable_splatnet3_monitoring: !!enable_splatnet3_monitoring
+            }
+        });
         forceRefreshDiscordOptions();
     }, [ipc, discord_options]);
 
@@ -191,7 +195,7 @@ function _Preferences(props: {
 
                 <View style={styles.button}>
                     <Button title={t('discord.setup')}
-                        onPress={() => ipc.showDiscordModal({show_preferences_button: false})}
+                        onPress={() => ipc.showDiscordModal({ show_preferences_button: false })}
                         color={'#' + (accent_colour ?? DEFAULT_ACCENT_COLOUR)} />
                 </View>
 
@@ -220,7 +224,7 @@ function _Preferences(props: {
                     </View>
 
                     <TouchableOpacity style={styles.textLinkTouchable} onPress={() => setIsDiscordFriendCodeSelf(false)}>
-                        <Text style={[styles.textLink, theme.text, {color: '#' + (accent_colour ?? DEFAULT_ACCENT_COLOUR)}]}>
+                        <Text style={[styles.textLink, theme.text, { color: '#' + (accent_colour ?? DEFAULT_ACCENT_COLOUR) }]}>
                             {t('discord.friend_code_custom')}
                         </Text>
                     </TouchableOpacity>
@@ -435,6 +439,7 @@ const light = StyleSheet.create({
     picker: {
         backgroundColor: HIGHLIGHT_COLOUR_LIGHT,
         color: TEXT_COLOUR_LIGHT,
+        colorScheme: 'light',
     },
     textInput: {
         backgroundColor: HIGHLIGHT_COLOUR_LIGHT,
@@ -449,6 +454,7 @@ const dark = StyleSheet.create({
     picker: {
         backgroundColor: HIGHLIGHT_COLOUR_DARK,
         color: TEXT_COLOUR_DARK,
+        colorScheme: 'dark',
     },
     textInput: {
         backgroundColor: HIGHLIGHT_COLOUR_DARK,

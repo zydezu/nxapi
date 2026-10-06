@@ -136,6 +136,8 @@ export const main_window = {
 
         add_user: 'ユーザーを追加',
         discord_setup: 'Discord Rich Presenceを設定',
+
+        preferences: '設定',
     },
 
     update: {

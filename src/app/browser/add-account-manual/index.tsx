@@ -53,7 +53,7 @@ function AddAccountManualPrompt(props: AddAccountManualPromptProps & {
         </View>
 
         <Text style={[styles.header, theme.text]}>{t('response_heading')}</Text>
-        <Text style={[styles.help, theme.text]}>{t('response_help_1', {url: `npf${props.client_id}://auth`})}</Text>
+        <Text style={[styles.help, theme.text]}>{t('response_help_1', { url: `npf${props.client_id}://auth` })}</Text>
         <Text style={[styles.help, theme.text]}>{t('response_help_2')}</Text>
 
         <TextInput value={callback_url} onChangeText={setCallbackUrl}
@@ -129,6 +129,7 @@ const light = StyleSheet.create({
     picker: {
         backgroundColor: HIGHLIGHT_COLOUR_LIGHT,
         color: TEXT_COLOUR_LIGHT,
+        colorScheme: 'light',
     },
     textInput: {
         backgroundColor: HIGHLIGHT_COLOUR_LIGHT,
@@ -143,6 +144,7 @@ const dark = StyleSheet.create({
     picker: {
         backgroundColor: HIGHLIGHT_COLOUR_DARK,
         color: TEXT_COLOUR_DARK,
+        colorScheme: 'dark',
     },
     textInput: {
         backgroundColor: HIGHLIGHT_COLOUR_DARK,

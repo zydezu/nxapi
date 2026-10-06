@@ -169,6 +169,8 @@ export const main_window = {
 
         add_user: 'User hinzufügen',
         discord_setup: 'Discord Rich Presence einrichten',
+
+        preferences: 'Einstellungen',
     },
 
     update: {

@@ -8,7 +8,7 @@ import { i18n } from 'i18next';
 import MenuApp from './menu.js';
 import { handleOpenWebServiceUri } from './webservices.js';
 import { EmbeddedPresenceMonitor, PresenceMonitorManager } from './monitor.js';
-import { createModalWindow, createWindow } from './windows.js';
+import { createModalWindow, createWindow, getAvailableWindowHeight } from './windows.js';
 import { sendToAllWindows, setupIpc } from './ipc.js';
 import { askUserForUri, buildElectronProxyAgent, showErrorDialog } from './util.js';
 import { setAppInstance, updateMenuLanguage } from './app-menu.js';
@@ -52,7 +52,7 @@ enum LoginItemType {
 }
 const login_item_type: LoginItemType =
     process.platform === 'darwin' || process.platform === 'win32' ? LoginItemType.NATIVE_PARTIAL :
-    LoginItemType.NOT_SUPPORTED;
+        LoginItemType.NOT_SUPPORTED;
 
 const was_opened_at_login = process.platform === 'darwin' ?
     app.getLoginItemSettings(login_item_options).wasOpenedAtLogin :
@@ -60,6 +60,8 @@ const was_opened_at_login = process.platform === 'darwin' ?
 
 debug('Protocol registration options', protocol_registration_options);
 debug('Login item registration options', LoginItemType[login_item_type], login_item_options);
+
+const PREFERENCES_MAX_HEIGHT = 800;
 
 export class App {
     readonly store: Store;
@@ -109,7 +111,17 @@ export class App {
             return this.preferences_window;
         }
 
-        const window = createModalWindow(WindowType.PREFERENCES, {});
+        const height = Math.max(500, Math.min(PREFERENCES_MAX_HEIGHT, getAvailableWindowHeight()));
+
+        const window = createModalWindow(WindowType.PREFERENCES, {}, undefined, {
+            resizable: true,
+            width: 400,
+            height,
+            minWidth: 400,
+            maxWidth: 600,
+            minHeight: 200,
+            maxHeight: height,
+        });
 
         window.on('closed', () => this.preferences_window = null);
 
@@ -129,7 +141,7 @@ export class App {
         }
 
         const window = createWindow(WindowType.ALBUM, props, {
-            width: 960,
+            width: 900,
             height: 680,
             minWidth: 560,
             minHeight: 400,
@@ -147,7 +159,7 @@ export class App {
         const language = this.detectSystemLanguage();
         debug('Initialising i18n with language %s', language);
 
-        await i18n.init({lng: language ?? undefined});
+        await i18n.init({ lng: language ?? undefined });
         await i18n.loadNamespaces(['app', 'app_menu', 'menus', 'handle_uri', 'na_auth']);
 
         return i18n;
@@ -211,7 +223,7 @@ export async function init() {
     });
     setGlobalDispatcher(agent);
 
-    app.configureHostResolver({enableBuiltInResolver: false});
+    app.configureHostResolver({ enableBuiltInResolver: false });
 
     const [storage, i18n] = await Promise.all([
         initStorage(process.env.NXAPI_DATA_PATH ?? paths.data),
@@ -365,7 +377,7 @@ class StatusUpdateNotificationSubscriber implements StatusUpdateSubscriber {
         if (this._load_cache) return this._load_cache;
 
         return this._load_cache = this.app.store.storage.getItem('StatusUpdateNotifications')
-            .then(c => this._cache = (c as StatusUpdateNotificationsCache ?? {notified: []}))
+            .then(c => this._cache = (c as StatusUpdateNotificationsCache ?? { notified: [] }))
             .finally(() => this._load_cache = null);
     }
 
@@ -398,7 +410,7 @@ class StatusUpdateNotificationSubscriber implements StatusUpdateSubscriber {
 
         notification.show();
 
-        cache.notified.push({id, notified_at: Date.now()});
+        cache.notified.push({ id, notified_at: Date.now() });
         this._cache_updated = true;
     }
 }
@@ -580,7 +592,7 @@ export class Store extends EventEmitter {
             await monitors.start(user.id, monitor => {
                 monitor.presence_user = state.discord_presence && 'na_id' in state.discord_presence.source &&
                     state.discord_presence.source.na_id === user.id ?
-                        state.discord_presence.source.friend_nsa_id ?? monitor.user.data.nsoAccount.user.nsaId : null;
+                    state.discord_presence.source.friend_nsa_id ?? monitor.user.data.nsoAccount.user.nsaId : null;
                 monitor.user_notifications = user.user_notifications;
                 monitor.friend_notifications = user.friend_notifications;
 
@@ -594,7 +606,7 @@ export class Store extends EventEmitter {
         } catch (err) {
             debug('Error restoring monitor for user %s', user.id, err);
 
-            const {response} = await showErrorDialog({
+            const { response } = await showErrorDialog({
                 message: (err instanceof Error ? err.name : 'Error') + ' restoring monitor for user ' + user.id,
                 error: err,
                 buttons: ['OK', 'Retry'],
@@ -622,7 +634,7 @@ export class Store extends EventEmitter {
         } catch (err) {
             debug('Error restoring monitor for presence URL %s', state.discord_presence.source.url, err);
 
-            const {response} = await showErrorDialog({
+            const { response } = await showErrorDialog({
                 message: (err instanceof Error ? err.name : 'Error') + ' restoring monitor for presence URL ' +
                     state.discord_presence.source.url,
                 error: err,

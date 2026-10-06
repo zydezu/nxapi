@@ -22,7 +22,7 @@ enum DiscordSourceType {
 }
 
 export default function DiscordSetupWindow(props: DiscordSetupProps) {
-    const [users, ,, forceRefreshAccounts] = useAsync(useCallback(() => getAccounts(), [ipc]));
+    const [users, , , forceRefreshAccounts] = useAsync(useCallback(() => getAccounts(), [ipc]));
     useEventListener(events, 'update-nintendo-accounts', forceRefreshAccounts, []);
     useEventListener(events, 'window:refresh', () => forceRefreshAccounts(), []);
 
@@ -109,9 +109,9 @@ function DiscordSetup(props: {
             if (!selectedUserId?.match(/^[0-9a-f]{16}$/)) throw new Error('Invalid Nintendo Account ID');
             if (!selectedFriendNsaId?.match(/^[0-9a-f]{16}$/)) throw new Error('Invalid friend Network Service Account ID');
 
-            await ipc.setDiscordPresenceSource({na_id: selectedUserId, friend_nsa_id: selectedFriendNsaId});
+            await ipc.setDiscordPresenceSource({ na_id: selectedUserId, friend_nsa_id: selectedFriendNsaId });
         } else if (selectedMode === DiscordSourceType.URL) {
-            await ipc.setDiscordPresenceSource({url: presenceUrl});
+            await ipc.setDiscordPresenceSource({ url: presenceUrl });
         } else {
             await ipc.setDiscordPresenceSource(null);
         }
@@ -266,6 +266,7 @@ const light = StyleSheet.create({
     picker: {
         backgroundColor: HIGHLIGHT_COLOUR_LIGHT,
         color: TEXT_COLOUR_LIGHT,
+        colorScheme: 'light',
     },
     textInput: {
         backgroundColor: HIGHLIGHT_COLOUR_LIGHT,
@@ -280,6 +281,7 @@ const dark = StyleSheet.create({
     picker: {
         backgroundColor: HIGHLIGHT_COLOUR_DARK,
         color: TEXT_COLOUR_DARK,
+        colorScheme: 'dark',
     },
     textInput: {
         backgroundColor: HIGHLIGHT_COLOUR_DARK,

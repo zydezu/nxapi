@@ -19,7 +19,6 @@ export const WindowFocusedContext = React.createContext(false);
 
 export function Root(props: React.PropsWithChildren<{
     title?: string | ((i18n: i18n) => string);
-    /** Only used when no `title` is given: the user's nickname becomes the title, as in `nxapi - toad` */
     titleUser?: User | SavedToken;
     style?: StyleProp<ViewStyle>;
     scrollable?: boolean;
@@ -73,10 +72,20 @@ export function Root(props: React.PropsWithChildren<{
     const unlockFocus = useCallback(() => setPreventFocus(false), []);
     useLayoutEffect(() => setPreventFocus(props.autoresize ?? true), [props.autoresize]);
 
+    const last_window_height = React.useRef<number | null>(null);
+
     const onLayout = useCallback(async (event: LayoutChangeEvent) => {
         if (!event.nativeEvent.layout.height) return;
 
-        await ipc.setWindowHeight(event.nativeEvent.layout.height);
+        const height = event.nativeEvent.layout.height;
+
+        if (last_window_height.current === null ||
+            Math.abs(window.innerHeight - last_window_height.current) <= 2
+        ) {
+            last_window_height.current = height;
+            await ipc.setWindowHeight(height);
+        }
+
         setPreventFocus(false);
     }, []);
 
@@ -120,7 +129,7 @@ export function Root(props: React.PropsWithChildren<{
                         passed in directly keep their capitalisation */}
                     <WindowTitle title={formatWindowTitle(
                         typeof props.title === 'function' ? props.title.call(null, i18n).toLowerCase() :
-                        props.title ?? title_user?.toLowerCase(), i18n.t('app:default_title'))} />
+                            props.title ?? title_user?.toLowerCase(), i18n.t('app:default_title'))} />
 
                     {content}
                 </I18nextProvider>
@@ -248,17 +257,17 @@ export function useColourScheme() {
 
 export interface User<IsCoral extends boolean = boolean> {
     user:
-        IsCoral extends true ? NintendoAccountUserCoral :
-        IsCoral extends false ? NintendoAccountUserMoon :
-        NintendoAccountUserCoral | NintendoAccountUserMoon;
+    IsCoral extends true ? NintendoAccountUserCoral :
+    IsCoral extends false ? NintendoAccountUserMoon :
+    NintendoAccountUserCoral | NintendoAccountUserMoon;
     nso:
-        IsCoral extends true ? SavedToken :
-        IsCoral extends false ? null :
-        SavedToken | null;
+    IsCoral extends true ? SavedToken :
+    IsCoral extends false ? null :
+    SavedToken | null;
     nsotoken:
-        IsCoral extends true ? string :
-        IsCoral extends false ? null :
-        string | null;
+    IsCoral extends true ? string :
+    IsCoral extends false ? null :
+    string | null;
     moon: SavedMoonToken | null;
     moontoken: string | undefined;
 }
@@ -277,7 +286,7 @@ export async function getAccounts() {
 
         if (!nso && !moon) continue;
 
-        accounts.push({user: nso?.user ?? moon!.user, nso, nsotoken, moon, moontoken});
+        accounts.push({ user: nso?.user ?? moon!.user, nso, nsotoken, moon, moontoken });
     }
 
     return accounts;
@@ -333,18 +342,18 @@ interface TimeSinceInterval {
 }
 
 const time_since_intervals: TimeSinceInterval[] = [
-    {interval: 1000, max: 10, string: () => 'just now', key: 'default.now'},
-    {interval: 1000, max: 60, string: c => c + ' second' + (c === 1 ? '' : 's') + ' ago', key: 'default.seconds'},
-    {interval: 60 * 1000, max: 60, string: c => c + ' minute' + (c === 1 ? '' : 's') + ' ago', key: 'default.minutes'},
-    {interval: 60 * 60 * 1000, max: 24, string: c => c + ' hour' + (c === 1 ? '' : 's') + ' ago', key: 'default.hours'},
-    {interval: 24 * 60 * 60 * 1000, max: Infinity, string: c => c + ' day' + (c === 1 ? '' : 's') + ' ago', key: 'default.days'},
+    { interval: 1000, max: 10, string: () => 'just now', key: 'default.now' },
+    { interval: 1000, max: 60, string: c => c + ' second' + (c === 1 ? '' : 's') + ' ago', key: 'default.seconds' },
+    { interval: 60 * 1000, max: 60, string: c => c + ' minute' + (c === 1 ? '' : 's') + ' ago', key: 'default.minutes' },
+    { interval: 60 * 60 * 1000, max: 24, string: c => c + ' hour' + (c === 1 ? '' : 's') + ' ago', key: 'default.hours' },
+    { interval: 24 * 60 * 60 * 1000, max: Infinity, string: c => c + ' day' + (c === 1 ? '' : 's') + ' ago', key: 'default.days' },
 ];
 const short_time_since_intervals: TimeSinceInterval[] = [
-    {interval: 1000, max: 10, string: () => 'Just now', key: 'default.now'},
-    {interval: 1000, max: 60, string: c => c + ' sec' + (c === 1 ? '' : 's'), key: 'short.seconds'},
-    {interval: 60 * 1000, max: 60, string: c => c + ' min' + (c === 1 ? '' : 's'), key: 'short.minutes'},
-    {interval: 60 * 60 * 1000, max: 24, string: c => c + ' hr' + (c === 1 ? '' : 's'), key: 'short.hours'},
-    {interval: 24 * 60 * 60 * 1000, max: Infinity, string: c => c + ' day' + (c === 1 ? '' : 's'), key: 'short.days'},
+    { interval: 1000, max: 10, string: () => 'Just now', key: 'default.now' },
+    { interval: 1000, max: 60, string: c => c + ' sec' + (c === 1 ? '' : 's'), key: 'short.seconds' },
+    { interval: 60 * 1000, max: 60, string: c => c + ' min' + (c === 1 ? '' : 's'), key: 'short.minutes' },
+    { interval: 60 * 60 * 1000, max: 24, string: c => c + ' hr' + (c === 1 ? '' : 's'), key: 'short.hours' },
+    { interval: 24 * 60 * 60 * 1000, max: Infinity, string: c => c + ' day' + (c === 1 ? '' : 's'), key: 'short.days' },
 ];
 
 function getTimeSince(
@@ -360,7 +369,7 @@ function getTimeSince(
         if (elapsed < i.max * i.interval || last === i) {
             const count = Math.floor(elapsed / i.interval);
             return [
-                (t && i.key ? t(i.key, {count, defaultValue: ''}) : '') || i.string.call(null, count),
+                (t && i.key ? t(i.key, { count, defaultValue: '' }) : '') || i.string.call(null, count),
                 i.interval - (elapsed - (count * i.interval)),
             ];
         }

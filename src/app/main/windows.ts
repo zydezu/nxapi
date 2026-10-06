@@ -1,4 +1,4 @@
-import { BrowserWindow, BrowserWindowConstructorOptions, nativeTheme, session, WebContents } from 'electron';
+import { BrowserWindow, BrowserWindowConstructorOptions, nativeTheme, screen, session, WebContents } from 'electron';
 import * as path from 'node:path';
 import { dev } from '../../util/product.js';
 import { WindowConfiguration, WindowType } from '../common/types.js';
@@ -82,7 +82,7 @@ export function createModalWindow<T extends WindowType>(
 
     if (process.platform === 'win32') {
         // Use a fixed window width on Windows due to a bug getting/setting window size
-        window.setResizable(false);
+        if (!options?.resizable) window.setResizable(false);
         modal_window_width.set(window, options?.width ?? 560);
     }
 
@@ -90,14 +90,20 @@ export function createModalWindow<T extends WindowType>(
 }
 
 export function setWindowHeight(window: BrowserWindow, height: number) {
-    const [curWidth, curHeight] = window.getSize();
+    const [, curHeight] = window.getSize();
     const [curContentWidth, curContentHeight] = window.getContentSize();
     const [minWidth, minHeight] = window.getMinimumSize();
     const [maxWidth, maxHeight] = window.getMaximumSize();
+    const frame_height = curHeight > curContentHeight ? curHeight - curContentHeight : 0;
 
-    if (height !== curContentHeight && curHeight === minHeight && curHeight === maxHeight) {
-        window.setMinimumSize(minWidth, height + (curHeight - curContentHeight));
-        window.setMaximumSize(maxWidth, height + (curHeight - curContentHeight));
+    if (curHeight === minHeight && curHeight === maxHeight) {
+        if (height + frame_height !== curHeight) {
+            window.setMinimumSize(minWidth, height + frame_height);
+            window.setMaximumSize(maxWidth, height + frame_height);
+        }
+    } else {
+        const max_content_height = Math.min(maxHeight - frame_height, getAvailableWindowHeight(window));
+        height = Math.min(Math.max(height, minHeight - frame_height), max_content_height);
     }
 
     window.setContentSize(modal_window_width.get(window) ?? curContentWidth, height);
@@ -106,6 +112,17 @@ export function setWindowHeight(window: BrowserWindow, height: number) {
         window.show();
         modal_window_shown.add(window);
     }
+}
+
+/** The height a window on this display may occupy, leaving room for the title bar and borders */
+export function getAvailableWindowHeight(window?: BrowserWindow) {
+    const display = screen.getDisplayMatching(
+        window?.getBounds() ??
+        BrowserWindow.getFocusedWindow()?.getBounds() ??
+        BrowserWindow.getAllWindows()[0]?.getBounds() ??
+        screen.getPrimaryDisplay().workArea);
+
+    return display.workArea.height - 60;
 }
 
 const BACKGROUND_COLOUR_MAIN_LIGHT = process.platform === 'win32' ? '#ffffff' : '#ececec';

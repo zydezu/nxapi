@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import ipc from '../ipc.js';
 import { RequestState, useActiveDiscordPresence, useActiveDiscordUser, useColourScheme, useDiscordPresenceSource, User } from '../util.js';
 import DiscordPresenceSource from './discord.js';
+import SettingsIcon from '../components/icons/settings.js';
 import { BORDER_COLOUR_DARK, BORDER_COLOUR_LIGHT, HIGHLIGHT_COLOUR_DARK, HIGHLIGHT_COLOUR_LIGHT, NSO_COLOUR, NSO_COLOUR_DARK, TEXT_COLOUR_DARK, TEXT_COLOUR_LIGHT } from '../constants.js';
 
 export default function Sidebar(props: {
@@ -54,6 +55,11 @@ export default function Sidebar(props: {
                 {props.children}
             </View>
         </ScrollView>
+
+        <TouchableOpacity style={[styles.footer, theme.footer]} onPress={() => ipc.showPreferencesWindow()}>
+            <Text style={[styles.footerIcon, theme.text]}><SettingsIcon title={t('preferences')!} /></Text>
+            <Text style={[styles.footerText, theme.text]}>{t('preferences')}</Text>
+        </TouchableOpacity>
     </View>;
 }
 
@@ -70,8 +76,8 @@ function User(props: {
 
     const mii_url = new URL(props.user.user.iconUri ?? (props.user.user.mii ?
         'https://' + props.user.user.mii.imageOrigin + '/2.0.0/mii_images/' +
-            props.user.user.mii.id + '/' +
-            props.user.user.mii.etag + '.png' :
+        props.user.user.mii.id + '/' +
+        props.user.user.mii.etag + '.png' :
         'https://cdn.accounts.nintendo.com/account/images/common/defaults/mii.png'));
 
     if (mii_url.origin === 'https://cdn-mii.accounts.nintendo.com' ||
@@ -101,8 +107,10 @@ function User(props: {
 
                 {props.user.nso ? <View style={styles.userNso}>
                     <View style={styles.userNsoImage}>
-                        <Image source={{uri: props.user.nso.nsoAccount.user.image2Uri ??
-                            props.user.nso.nsoAccount.user.imageUri, width: 16, height: 16}} />
+                        <Image source={{
+                            uri: props.user.nso.nsoAccount.user.image2Uri ??
+                                props.user.nso.nsoAccount.user.imageUri, width: 16, height: 16
+                        }} />
                     </View>
 
                     <Text style={[styles.userNsoName, theme.text]}>{props.user.nso.nsoAccount.user.name}</Text>
@@ -164,6 +172,21 @@ const styles = StyleSheet.create({
         paddingHorizontal: 20,
     },
 
+    footer: {
+        borderTopWidth: 1,
+        paddingVertical: 10,
+        paddingHorizontal: 20,
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
+    footerIcon: {
+        fontSize: 16,
+        marginRight: 14,
+    },
+    footerText: {
+        flex: 1,
+    },
+
     user: {
         flexDirection: 'row',
         paddingVertical: 8,
@@ -207,6 +230,9 @@ const light = StyleSheet.create({
     userSelected: {
         backgroundColor: HIGHLIGHT_COLOUR_LIGHT,
     },
+    footer: {
+        borderTopColor: BORDER_COLOUR_LIGHT,
+    },
     text: {
         color: TEXT_COLOUR_LIGHT,
     },
@@ -221,6 +247,9 @@ const dark = StyleSheet.create({
     },
     userSelected: {
         backgroundColor: HIGHLIGHT_COLOUR_DARK,
+    },
+    footer: {
+        borderTopColor: BORDER_COLOUR_DARK,
     },
     text: {
         color: TEXT_COLOUR_DARK,
