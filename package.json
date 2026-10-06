@@ -97,6 +97,10 @@
         "appId": "uk.org.fancy.nxapi.app",
         "productName": "nxapi",
         "icon": "resources/icon.png",
+        "defaultArch": "x64",
+        "nsis": {
+            "buildUniversalInstaller": false
+        },
         "copyright": "Copyright © 2023 Ellie",
         "npmRebuild": false,
         "files": [
