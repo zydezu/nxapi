@@ -76,6 +76,8 @@ jobs:
   windows_x64:
     runs-on: ubuntu-latest
     container: electronuserland/builder:wine
+    env:
+      HOME: /root
     steps:
       - uses: actions/checkout@v7
       - name: Trust the workspace
@@ -97,6 +99,8 @@ jobs:
   windows_arm64:
     runs-on: ubuntu-latest
     container: electronuserland/builder:wine
+    env:
+      HOME: /root
     steps:
       - uses: actions/checkout@v7
       - name: Trust the workspace

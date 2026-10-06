@@ -92,6 +92,8 @@ jobs:
     name: Build Windows x64
     runs-on: ubuntu-latest
     container: electronuserland/builder:wine
+    env:
+      HOME: /root
     steps:
       - uses: actions/checkout@v7
       - name: Trust the workspace
@@ -114,6 +116,8 @@ jobs:
     name: Build Windows ARM64
     runs-on: ubuntu-latest
     container: electronuserland/builder:wine
+    env:
+      HOME: /root
     steps:
       - uses: actions/checkout@v7
       - name: Trust the workspace
