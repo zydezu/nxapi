@@ -24,8 +24,8 @@ jobs:
     name: Build Linux x64
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with:
           node-version: 20
       - run: npm ci --force
@@ -36,7 +36,7 @@ jobs:
           NXAPI_AUTH_CLI_CLIENT_ID: ${{ secrets.NXAPI_AUTH_CLIENT_ID }}
           NXAPI_AUTH_APP_CLIENT_ID: ${{ secrets.NXAPI_AUTH_CLIENT_ID }}
       - run: npx electron-builder --linux AppImage deb --x64 -p never
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: nxapi_Linux_x64
           path: |
@@ -47,8 +47,8 @@ jobs:
     name: Build macOS x64
     runs-on: macos-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with:
           node-version: 20
       - run: npm ci --force
@@ -59,7 +59,7 @@ jobs:
           NXAPI_AUTH_CLI_CLIENT_ID: ${{ secrets.NXAPI_AUTH_CLIENT_ID }}
           NXAPI_AUTH_APP_CLIENT_ID: ${{ secrets.NXAPI_AUTH_CLIENT_ID }}
       - run: npx electron-builder --mac zip --x64 -p never
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: nxapi_MacOS_x64
           path: |
@@ -69,8 +69,8 @@ jobs:
     name: Build macOS ARM64
     runs-on: macos-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with:
           node-version: 20
       - run: npm ci --force
@@ -81,7 +81,7 @@ jobs:
           NXAPI_AUTH_CLI_CLIENT_ID: ${{ secrets.NXAPI_AUTH_CLIENT_ID }}
           NXAPI_AUTH_APP_CLIENT_ID: ${{ secrets.NXAPI_AUTH_CLIENT_ID }}
       - run: npx electron-builder --mac zip --arm64 -p never || true
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         continue-on-error: true
         with:
           name: nxapi_MacOS_ARM64
@@ -93,7 +93,9 @@ jobs:
     runs-on: ubuntu-latest
     container: electronuserland/builder:wine
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
+      - name: Trust the workspace
+        run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
       - run: npm ci --force
       - run: npx tsc
       - run: npx rollup --config
@@ -102,7 +104,7 @@ jobs:
           NXAPI_AUTH_CLI_CLIENT_ID: ${{ secrets.NXAPI_AUTH_CLIENT_ID }}
           NXAPI_AUTH_APP_CLIENT_ID: ${{ secrets.NXAPI_AUTH_CLIENT_ID }}
       - run: npx electron-builder --win nsis --x64 -p never
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: nxapi_Windows_x64
           path: |
@@ -113,7 +115,9 @@ jobs:
     runs-on: ubuntu-latest
     container: electronuserland/builder:wine
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
+      - name: Trust the workspace
+        run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
       - run: npm ci --force
       - run: npx tsc
       - run: npx rollup --config
@@ -122,7 +126,7 @@ jobs:
           NXAPI_AUTH_CLI_CLIENT_ID: ${{ secrets.NXAPI_AUTH_CLIENT_ID }}
           NXAPI_AUTH_APP_CLIENT_ID: ${{ secrets.NXAPI_AUTH_CLIENT_ID }}
       - run: npx electron-builder --win nsis --arm64 -p never || true
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         continue-on-error: true
         with:
           name: nxapi_Windows_ARM64
@@ -142,9 +146,9 @@ jobs:
       - windows_x64
       - windows_arm64
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Download all artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           path: releases
           merge-multiple: true
