@@ -126,11 +126,6 @@ const light = StyleSheet.create({
     text: {
         color: TEXT_COLOUR_LIGHT,
     },
-    picker: {
-        backgroundColor: HIGHLIGHT_COLOUR_LIGHT,
-        color: TEXT_COLOUR_LIGHT,
-        colorScheme: 'light',
-    },
     textInput: {
         backgroundColor: HIGHLIGHT_COLOUR_LIGHT,
         color: TEXT_COLOUR_LIGHT,
@@ -140,11 +135,6 @@ const light = StyleSheet.create({
 const dark = StyleSheet.create({
     text: {
         color: TEXT_COLOUR_DARK,
-    },
-    picker: {
-        backgroundColor: HIGHLIGHT_COLOUR_DARK,
-        color: TEXT_COLOUR_DARK,
-        colorScheme: 'dark',
     },
     textInput: {
         backgroundColor: HIGHLIGHT_COLOUR_DARK,

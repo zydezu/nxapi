@@ -1,4 +1,5 @@
 import { AppRegistry } from 'react-native';
+import { HIGHLIGHT_COLOUR_LIGHT_OPAQUE, TEXT_COLOUR_LIGHT } from './constants.js';
 import { config } from './ipc.js';
 import App from './main/index.js';
 import Friend from './friend/index.js';
@@ -31,6 +32,11 @@ style.textContent = `
 input,
 input:focus-visible {
     outline: none 0;
+}
+
+select option {
+    background-color: var(--nxapi-select-background, ${HIGHLIGHT_COLOUR_LIGHT_OPAQUE});
+    color: var(--nxapi-select-foreground, ${TEXT_COLOUR_LIGHT});
 }
 `;
 

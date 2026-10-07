@@ -4,7 +4,7 @@ import { StyleSheet, Text, TextInput, View } from 'react-native';
 import { Picker } from 'react-native-web';
 import { DiscordPresenceSource } from '../../common/types.js';
 import { Button } from '../components/index.js';
-import { DEFAULT_ACCENT_COLOUR, HIGHLIGHT_COLOUR_DARK, HIGHLIGHT_COLOUR_LIGHT, TEXT_COLOUR_DARK, TEXT_COLOUR_LIGHT } from '../constants.js';
+import { DEFAULT_ACCENT_COLOUR, HIGHLIGHT_COLOUR_DARK, HIGHLIGHT_COLOUR_DARK_OPAQUE, HIGHLIGHT_COLOUR_LIGHT, HIGHLIGHT_COLOUR_LIGHT_OPAQUE, TEXT_COLOUR_DARK, TEXT_COLOUR_LIGHT } from '../constants.js';
 import ipc, { events } from '../ipc.js';
 import { getAccounts, RequestState, Root, useAccentColour, useAsync, useColourScheme, useDiscordPresenceSource, useEventListener, User } from '../util.js';
 
@@ -264,7 +264,7 @@ const light = StyleSheet.create({
         color: TEXT_COLOUR_LIGHT,
     },
     picker: {
-        backgroundColor: HIGHLIGHT_COLOUR_LIGHT,
+        backgroundColor: HIGHLIGHT_COLOUR_LIGHT_OPAQUE,
         color: TEXT_COLOUR_LIGHT,
         colorScheme: 'light',
     },
@@ -279,7 +279,7 @@ const dark = StyleSheet.create({
         color: TEXT_COLOUR_DARK,
     },
     picker: {
-        backgroundColor: HIGHLIGHT_COLOUR_DARK,
+        backgroundColor: HIGHLIGHT_COLOUR_DARK_OPAQUE,
         color: TEXT_COLOUR_DARK,
         colorScheme: 'dark',
     },

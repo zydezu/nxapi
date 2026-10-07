@@ -15,6 +15,9 @@ export const UPDATE_COLOUR = '#006064e0';
 export const HIGHLIGHT_COLOUR_LIGHT = '#00000020';
 export const HIGHLIGHT_COLOUR_DARK = '#ffffff20';
 
+export const HIGHLIGHT_COLOUR_LIGHT_OPAQUE = ipc.platform === 'win32' ? '#dfdfdf' : '#cecece';
+export const HIGHLIGHT_COLOUR_DARK_OPAQUE = ipc.platform === 'win32' ? '#202020' : '#403f3f';
+
 export const BORDER_COLOUR_LIGHT = '#00000020';
 export const BORDER_COLOUR_DARK = '#00000080';
 export const BORDER_COLOUR_SECONDARY_DARK = '#ffffff20';

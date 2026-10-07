@@ -11,7 +11,15 @@ import { SavedToken } from '../../common/auth/coral.js';
 import { SavedMoonToken } from '../../common/auth/moon.js';
 import { DiscordPresence } from '../../discord/types.js';
 import ipc, { events } from './ipc.js';
-import { BACKGROUND_COLOUR_MAIN_DARK, BACKGROUND_COLOUR_MAIN_LIGHT, DEFAULT_ACCENT_COLOUR } from './constants.js';
+import {
+    BACKGROUND_COLOUR_MAIN_DARK,
+    BACKGROUND_COLOUR_MAIN_LIGHT,
+    DEFAULT_ACCENT_COLOUR,
+    HIGHLIGHT_COLOUR_DARK_OPAQUE,
+    HIGHLIGHT_COLOUR_LIGHT_OPAQUE,
+    TEXT_COLOUR_DARK,
+    TEXT_COLOUR_LIGHT,
+} from './constants.js';
 import { formatWindowTitle } from '../common/title.js';
 import createI18n from '../i18n/index.js';
 
@@ -28,6 +36,14 @@ export function Root(props: React.PropsWithChildren<{
 }>) {
     const colour_scheme = useColorScheme();
     const theme = colour_scheme === 'light' ? light : dark;
+
+    useEffect(() => {
+        const is_light = colour_scheme === 'light';
+        document.documentElement.style.setProperty('--nxapi-select-background',
+            is_light ? HIGHLIGHT_COLOUR_LIGHT_OPAQUE : HIGHLIGHT_COLOUR_DARK_OPAQUE);
+        document.documentElement.style.setProperty('--nxapi-select-foreground',
+            is_light ? TEXT_COLOUR_LIGHT : TEXT_COLOUR_DARK);
+    }, [colour_scheme]);
 
     const [accent_colour, setAccentColour] = React.useState(() => ipc.getAccentColour());
     useEventListener(events, 'systemPreferences:accent-colour', setAccentColour, []);
